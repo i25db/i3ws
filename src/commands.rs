@@ -4,13 +4,9 @@ use crate::app;
 
 pub fn run_workspace_command(name: app::WorkspaceName) -> Output {
     Command::new("i3-msg")
-        .arg(format!("workspace {}", format(&name)))
+        .arg(format!("workspace {}", String::from(name)))
         .output()
         .expect("Failed to execute i3-msg command")
-}
-
-pub fn format(name: &app::WorkspaceName) -> String {
-    format!("{}{}-{}:{}", name.prefix, name.main_index, name.sub_index, name.suffix)
 }
 
 pub fn get_workspaces() -> String {

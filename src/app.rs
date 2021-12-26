@@ -2,8 +2,9 @@ use clap::{App, AppSettings, Arg, ArgSettings, ArgMatches};
 pub use crate::app;
 
 pub const PREFIX: &str = "i3ws";
-pub const CODE_SUFFIX: &str = "code";
-pub const GAME_SUFFIX: &str = "game";
+pub const PLAIN_SUFFIX: &str = ":";
+pub const CODE_SUFFIX: &str = ":code";
+pub const GAME_SUFFIX: &str = ":game";
 
 #[derive(Debug)]
 pub struct WorkspaceName {
@@ -19,7 +20,68 @@ impl Default for WorkspaceName {
             prefix: String::from(PREFIX),
             main_index: String::from("1"),
             sub_index: String::from("1"),
-            suffix: String::default()
+            suffix: String::from(PLAIN_SUFFIX)
+        }
+    }
+}
+
+impl From<&WorkspaceName> for WorkspaceName {
+    fn from(name: &WorkspaceName) -> Self {
+        Self {
+            prefix: String::from(&name.prefix),
+            main_index: String::from(&name.main_index),
+            sub_index: String::from(&name.sub_index),
+            suffix: String::from(&name.suffix)
+        }
+    }
+}
+
+impl From<WorkspaceName> for String {
+    fn from(name: WorkspaceName) -> Self {
+        format(&name)
+    }
+}
+
+pub fn format(name: &WorkspaceName) -> String {
+    format!("{}{}-{}{}", name.prefix, name.main_index, name.sub_index, name.suffix)
+}
+
+impl Into<WorkspaceName> for String {
+    fn into(self) -> WorkspaceName {
+        if !self.contains(PREFIX) || !self.contains(':') || !self.contains('-') {
+            return WorkspaceName::default();
+        }
+
+        let name = self.trim_start_matches(PREFIX);
+        let main_index = String::from(&name[0..1]);
+        let sub_index = String::from(&name[2..3]);
+        let suffix = String::from(&name[name.find(':').unwrap()..]);
+
+        WorkspaceName {
+            prefix: String::from(PREFIX),
+            main_index,
+            sub_index,
+            suffix
+        }
+    }
+}
+
+impl Into<WorkspaceName> for &String {
+    fn into(self) -> WorkspaceName {
+        if !self.contains(PREFIX) || !self.contains(':') || !self.contains('-') {
+            return WorkspaceName::default();
+        }
+
+        let name = self.trim_start_matches(PREFIX);
+        let main_index = String::from(&name[0..1]);
+        let sub_index = String::from(&name[2..3]);
+        let suffix = String::from(&name[name.find(':').unwrap()..]);
+
+        WorkspaceName {
+            prefix: String::from(PREFIX),
+            main_index,
+            sub_index,
+            suffix
         }
     }
 }
