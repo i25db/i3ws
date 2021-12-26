@@ -1,0 +1,16 @@
+mod query;
+pub use query::Query;
+
+use crate::config::Config;
+use crate::workspace::Workspace;
+
+pub fn get_focused_workspace(config: &Config) -> Option<WorkspaceName> {
+    let focused =
+        filter_workspaces(|ws, _| ws.focused && ws.name.starts_with(config.prefix.as_str()));
+
+    if let Some(focused) = focused {
+        return Some(focused[0].clone());
+    }
+
+    None
+}
