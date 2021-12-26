@@ -1,14 +1,7 @@
-use clap::{App, AppSettings, Arg, ArgSettings, ArgMatches};
-use std::process::{Command, Output};
-use serde::Serialize;
-use serde::Deserialize;
-use std::str;
-use std::io;
-
-const PREFIX: &str = "i3ws";
-const PLAIN_SUFFIX: &str  = ":plain";
-const CODE_SUFFIX: &str = ":code";
-const GAME_SUFFIX: &str = ":game";
+pub mod commands;
+pub mod json;
+pub mod app;
+use app::*;
 
 fn main() {
     let matches = get_matches();
@@ -25,17 +18,34 @@ fn main() {
 
             match workspace {
                 "main" => {
-                    run_workspace_command(PREFIX, index, "1", PLAIN_SUFFIX).expect("Error running i3-msg command");
+                    commands::run_workspace_command(app::WorkspaceName { main_index: index.to_string(), ..Default::default() });
                 }
                 "sub" => {
-                    let output = Command::new("i3-msg")
-                        .args(["-t", "get_workspaces"]).output().expect("Failed to execute i3-msg command");
-                    let workspaces = parse_workspaces(str::from_utf8(&output.stdout).unwrap());
+                    let workspaces = json::parse_workspaces(&commands::get_workspaces());
 
-                    // Find a focused i3ws workspace
-                    let mut main_index: Option<char> = None;
-                    for ws in &workspaces {
-                        println!("{:?}", ws);
+                    // Find a focused i3ws workspace, trim the prefix off and get the first
+                    // character
+                    let vec = workspaces.iter()
+                        .filter(|ws| ws.focused && ws.name.starts_with(PREFIX))
+                        .map(|ws| ws.name.trim_start_matches(PREFIX).as_bytes()[0] as char)
+                        .collect::<Vec<char>>();
+
+                    if vec.len() > 0 {
+                        let main_index = vec[0];
+
+                        let ws_name = app::WorkspaceName { main_index: String::from(main_index), sub_index: index.to_string(), ..Default::default()};
+                        if should_create {
+                            commands::run_workspace_command(ws_name);
+                        }
+                        else if workspaces.iter()
+                            .filter(|ws| ws.name == commands::format(&ws_name))
+                            .collect::<Vec<_>>()
+                            .len() == 1 {
+                            commands::run_workspace_command(ws_name);
+                        }
+                    }
+
+                    /*for ws in &workspaces {
                         if ws.focused {
                             let name = &ws.name;
 
@@ -48,20 +58,12 @@ fn main() {
                                 break;
                             }
                         }
-                    }
-
+                    }*/
                     // If there was an existing main workspace
-                    if let Some(main_index) = main_index {
-                        let sub_name = format!("{}{}-{}", PREFIX, main_index, index);
-
-                        println!("Working on {}", sub_name);
-
+                    /*if let Some(main_index) = main_index {
                         // switch to/create sub workspace
                         if should_create {
-                            println!("Creating sub workspace {}", sub_name);
-                            Command::new("i3-msg")
-                                .arg(format!("workspace {}", sub_name))
-                                .output().expect("Failed to execute i3-msg command");
+                            commands::run_workspace_command(ws_name);
                         }
                         // find if the sub workspace exists
                         else {
@@ -75,7 +77,7 @@ fn main() {
                                 }
                             }
                         }
-                    }
+                    }*/
                 }
                 _ => {
                     panic!("Invalid workspace");
@@ -89,78 +91,4 @@ fn main() {
 
         }
     }
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-struct Workspace {
-    id: i64,
-    num: i32,
-    name: String,
-    visible: bool,
-    focused: bool,
-    rect: Rect,
-    output: String,
-    urgent: bool
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-struct Rect {
-    x: i32,
-    y: i32,
-    width: i32,
-    height: i32
-}
-
-fn run_workspace_command(pre: &str, main_index: &str, sub_index: &str, suff: &str) -> Result<Output, io::Error> {
-    Command::new("i3-msg")
-        .arg(format!("workspace {}{}-{}{}", pre, main_index, sub_index, suff))
-        .output()
-}
-
-fn parse_workspaces(json: &str) -> Vec<Workspace> {
-    serde_json::from_str(json).unwrap()
-}
-
-fn get_matches() -> ArgMatches {
-    App::new("i3ws")
-        .author("i25db <i25.db@outlook.com>")
-        .version("v0.0.1")
-        .about("A CLI tool for managing i3 workspaces")
-        .setting(AppSettings::SubcommandRequired)
-        .setting(AppSettings::DisableHelpSubcommand)
-        .subcommand(
-            App::new("go")
-                .short_flag('g')
-                .about("Go to a workspace")
-                .arg(
-                    Arg::new("create")
-                        .short('c')
-                        .help("Create new sub workspace if one doesn't exist")
-                )
-                .arg(
-                    Arg::new("workspace")
-                        .takes_value(true)
-                        .possible_values(["main", "sub"])
-                        .setting(ArgSettings::Required)
-                )
-                .arg(
-                    Arg::new("index")
-                        .takes_value(true)
-                        .possible_values(["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"])
-                        .default_value("0")
-                    )
-                .setting(AppSettings::ArgRequiredElseHelp)
-        )
-        .subcommand(
-            App::new("new")
-                .short_flag('n')
-                .about("Creates a new preset workspace")
-                .arg(
-                    Arg::new("new")
-                        .takes_value(true)
-                        .possible_values(&["plain", "code", "game"])
-                        .setting(ArgSettings::Required)
-                )
-        )
-        .get_matches()
 }
