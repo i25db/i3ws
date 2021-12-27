@@ -4,7 +4,7 @@ The purpose of this project is mostly to learn rust and along the way make a too
 - Navigate through the 10 main workspaces (ex. `i3ws -g main 0`)
 - Navigate through the sub workspaces (ex. `i3ws -g sub 0`)
 - Create a new workspace from preset (ex. `i3ws -n code`)
-- **And more incoming**
+- **And more incoming** <br/>
 When properly setup with shortcuts in your i3 config you can easily access 25+ workspaces
 ## Dependencies
 - **i3wm** or **i3-gaps** naturally
