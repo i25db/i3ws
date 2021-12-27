@@ -4,7 +4,7 @@ use crate::app;
 
 pub fn run_workspace_command(name: app::WorkspaceName) -> Output {
     Command::new("i3-msg")
-        .arg(format!("workspace {}", String::from(name)))
+        .arg(format!("workspace {}", String::from(&name)))
         .output()
         .expect("Failed to execute i3-msg command")
 }
