@@ -1,96 +1,32 @@
 use clap::{App, AppSettings, Arg, ArgSettings, ArgMatches, PossibleValue};
 
-#[derive(Debug, Clone)]
-pub struct WorkspaceName {
-    pub prefix: String,
-    pub main_index: String,
-    pub sub_index: String,
-    pub suffix: String
-}
-
-impl Default for WorkspaceName {
-    fn default() -> Self {
-        WorkspaceName::with(Config::default())
-    }
-}
-
-impl WorkspaceName {
-    pub fn with(config: Config) -> Self {
-        Self {
-            prefix: config.prefix,
-            main_index: "1".to_string(),
-            sub_index: "1".to_string(),
-            suffix: config.default_suffix
-        }
-    }
-
-    pub fn format(name: &WorkspaceName) -> String {
-        format!("{}:{}:{}:{}", name.prefix, name.main_index, name.sub_index, name.suffix)
-    }
-}
-
-impl From<&WorkspaceName> for String {
-    fn from(name: &WorkspaceName) -> Self {
-        WorkspaceName::format(name)
-    }
-}
-
-impl From<&String> for WorkspaceName {
-    fn from(name: &String) -> Self {
-        let split: Vec<String> = name.split(':').map(|s| s.to_string()).collect();
-
-        if split.len() != 4 {
-            panic!("Workspace '{}' can't be parsed", name);
-        }
-
-        Self {
-            prefix: split[0].to_string(),
-            main_index: split[1].to_string(),
-            sub_index: split[2].to_string(),
-            suffix: split[3].to_string()
-        }
-    }
-}
-
-use crate::json;
 use crate::commands;
 use crate::config::Config;
-
-fn filter_workspaces<F>(workspaces: &Vec<json::Workspace>, f: F) -> Vec<WorkspaceName> where F: Fn(&&json::Workspace, WorkspaceName) -> bool {
-    workspaces.iter()
-        .filter(|ws| {
-            let wsn: WorkspaceName = WorkspaceName::from(&ws.name);
-            f(ws, wsn)
-        })
-        .map(|ws| {
-            WorkspaceName::from(&ws.name)
-        }).collect::<Vec<WorkspaceName>>()
-}
+use crate::workspace::{WorkspaceName};
 
 fn handle_main_command(index: String, config: Config) {
     // i3ws:{1}:1:plain
     let mut ws_command = WorkspaceName::with(config);
     ws_command.main_index = index;
 
-    let json_workspaces = json::parse_workspaces(&commands::get_workspaces());
-    let workspaces = filter_workspaces(&json_workspaces,
-        |_, wsn| wsn.main_index == ws_command.main_index && wsn.sub_index == ws_command.sub_index);
+    let workspaces = commands::filter_workspaces(|_, wsn|  {
+        wsn.main_index == ws_command.main_index && wsn.sub_index == ws_command.sub_index
+    });
 
     // if there is an exact match for the main and sub index
-    if workspaces.len() == 1 {
+    if let Some(workspaces) = workspaces {
         // use the suffix from the existing workspace
         ws_command.suffix = workspaces[0].suffix.clone();
         commands::run_workspace_command(ws_command);
     }
     else {
         // There is no i3ws{1}-1:xxx maybe there is i3ws{1}-2:xxx
-        let workspaces = filter_workspaces(&json_workspaces,
-            |_, wsn| wsn.main_index == ws_command.main_index);
+        let workspaces = commands::filter_workspaces(|_, wsn| wsn.main_index == ws_command.main_index);
 
-        if workspaces.len() > 0 {
+        if let Some(workspaces) = workspaces {
             // Use the sub workspace and suffix from the existing workspace
-            ws_command.sub_index = workspaces[0].sub_index.clone();
-            ws_command.suffix = workspaces[0].suffix.clone();
+            ws_command.sub_index = workspaces[0].sub_index.to_string();
+            ws_command.suffix = workspaces[0].suffix.to_string();
 
             commands::run_workspace_command(ws_command);
         }
@@ -102,59 +38,28 @@ fn handle_main_command(index: String, config: Config) {
 }
 
 fn handle_sub_command(index: String, config: Config) {
-    let json_workspaces = json::parse_workspaces(&commands::get_workspaces());
-
-    // Find a focused i3ws workspace
-    let focused = filter_workspaces(&json_workspaces,
-        |ws, _| ws.focused && ws.name.starts_with(config.prefix.as_str()));
-
-    if focused.len() > 0 {
+    if let Some(mut focused) = commands::get_focused_workspace(&config) {
         // Use the main focused workspace with the give sub workspace
-        let mut target_main_ws = focused[0].clone();
-        target_main_ws.sub_index = index;
+        focused.sub_index = index.to_string();
 
         // Find if the target workspace exists
-        let target_ws = filter_workspaces(&json_workspaces,
-            |ws, _| ws.name == WorkspaceName::format(&target_main_ws));
+        let target_ws = commands::filter_workspaces(|ws, _| ws.name == WorkspaceName::format(&focused));
 
-        let growable = match config.get_type_by_name(target_main_ws.suffix.clone()) {
+        let growable = match config.get_type_by_name(focused.suffix.to_string()) {
             Some(n) => n.growable,
             None => false
         };
 
-        println!("Suffix {} is growable {}", target_main_ws.suffix, growable);
-
         // If the target workspace exists or is growable
-        if target_ws.len() == 1 || growable {
-            commands::run_workspace_command(target_main_ws.clone());
+        if target_ws.is_some() || growable {
+            commands::run_workspace_command(focused);
         }
     }
 }
 
-fn handle_new_command(new: &str, config: Config) {
-    let json_workspaces = json::parse_workspaces(&commands::get_workspaces());
-    let focused = filter_workspaces(&json_workspaces,
-        |ws, _| ws.focused && ws.name.starts_with(config.prefix.as_str()));
-
-    let focused_sub_ws = filter_workspaces(&json_workspaces,
-        |_, wsn| wsn.main_index == focused[0].main_index);
-
-    if focused_sub_ws.len() == 1 {
-        // There is only one sub workspace
-        // Check if the workspace is empty
-    }
-
-    match new {
-        new => {
-            if let Some(t) = config.types.iter().find(|t| t.name == new.to_string()) {
-                for command in &t.ws_commands {
-                    let _sub_ws = &command.sub_ws;
-                    for _command in &command.commands {
-
-                    }
-                }
-            }
-        }
+fn handle_new_command(_new_type: &str, config: Config) {
+    if let Some(_focused) = commands::get_focused_workspace(&config) {
+        // Check if the focused workspace and all sub workspaces are empty
     }
 }
 
@@ -226,9 +131,11 @@ pub fn get_matches(config: &Config) -> ArgMatches {
                         .setting(ArgSettings::Required)
                 )
         )
+
         .subcommand(
             App::new("default")
                 .short_flag('d')
+
                 .about("Prints the name of the default workspace")
         )
         .get_matches()
