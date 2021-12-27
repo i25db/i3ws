@@ -16,4 +16,3 @@ pub fn get_workspaces() -> String {
 
     String::from_utf8(output.stdout).expect("Unable to convert UTF-8 to String")
 }
-

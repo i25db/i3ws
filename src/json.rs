@@ -22,8 +22,6 @@ pub struct Rect {
     pub height: i32
 }
 
-
-
 pub fn parse_workspaces(json: &str) -> Vec<Workspace> {
     serde_json::from_str(json).expect("Unable to parse json")
 }
