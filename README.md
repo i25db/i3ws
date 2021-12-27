@@ -30,3 +30,4 @@ No support for configuration. Definitely planned though
 - [ ] Move and swap main/sub workspaces
 - [ ] Make it configurable
 - [ ] Output something nice so things like polybar, eww, etc... can use
+- [ ] Create an install script
