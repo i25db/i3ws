@@ -17,7 +17,7 @@ fn handle_main_command(index: String, config: Config) {
     if let Some(workspaces) = workspaces {
         // use the suffix from the existing workspace
         ws_command.suffix = workspaces[0].suffix.clone();
-        commands::run_workspace_command(ws_command);
+        commands::run_workspace_command(&ws_command);
     }
     else {
         // There is no i3ws{1}-1:xxx maybe there is i3ws{1}-2:xxx
@@ -28,11 +28,11 @@ fn handle_main_command(index: String, config: Config) {
             ws_command.sub_index = workspaces[0].sub_index.to_string();
             ws_command.suffix = workspaces[0].suffix.to_string();
 
-            commands::run_workspace_command(ws_command);
+            commands::run_workspace_command(&ws_command);
         }
         // else workspace doesn't exist yet, make default workspace
         else {
-            commands::run_workspace_command(ws_command);
+            commands::run_workspace_command(&ws_command);
         }
     }
 }
@@ -52,14 +52,30 @@ fn handle_sub_command(index: String, config: Config) {
 
         // If the target workspace exists or is growable
         if target_ws.is_some() || growable {
-            commands::run_workspace_command(focused);
+            commands::run_workspace_command(&focused);
         }
     }
 }
 
-fn handle_new_command(_new_type: &str, config: Config) {
-    if let Some(_focused) = commands::get_focused_workspace(&config) {
-        // Check if the focused workspace and all sub workspaces are empty
+fn handle_new_command(new_type: &str, config: Config) {
+    if commands::is_focused_workspace_empty(&config) {
+        // Make a new workspace
+        if let Some(ws_type) = config.get_type_by_name(new_type.to_string()) {
+            let mut focused = commands::get_focused_workspace(&config).unwrap();
+            focused.suffix = new_type.to_string();
+
+            for commands in &ws_type.ws_commands {
+                focused.sub_index = commands.sub_ws.clone();
+
+                // go to the current sub workspace
+                commands::run_workspace_command(&focused);
+
+                // execute all the commands here
+                for command in &commands.commands {
+                    println!("{}", command);
+                }
+            }
+        }
     }
 }
 

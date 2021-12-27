@@ -38,6 +38,7 @@ impl Default for Config {
             growable: true,
             ws_commands: vec![
                 WorkspaceCommand { sub_ws: "1".to_string(), commands: vec![String::from(""),]},
+                WorkspaceCommand { sub_ws: "2".to_string(), commands: vec![String::from(""),]},
             ]
         });
 
@@ -46,6 +47,7 @@ impl Default for Config {
             growable: false,
             ws_commands: vec![
                 WorkspaceCommand { sub_ws: "1".to_string(), commands: vec![String::from(""),]},
+                WorkspaceCommand { sub_ws: "2".to_string(), commands: vec![String::from(""),]},
             ]
         });
 
@@ -54,6 +56,7 @@ impl Default for Config {
             growable: false,
             ws_commands: vec![
                 WorkspaceCommand { sub_ws: "1".to_string(), commands: vec![String::from(""),]},
+                WorkspaceCommand { sub_ws: "2".to_string(), commands: vec![String::from(""),]},
             ]
         });
 

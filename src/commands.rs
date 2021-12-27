@@ -1,10 +1,10 @@
-use std::process::{Command, Output};
+use std::process::{Command, Output, Stdio};
 pub use crate::commands;
 use crate::{workspace::{WorkspaceName}, config::Config, json::*};
 
-pub fn run_workspace_command(name: WorkspaceName) -> Output {
+pub fn run_workspace_command(name: &WorkspaceName) -> Output {
     Command::new("i3-msg")
-        .arg(format!("workspace {}", String::from(&name)))
+        .arg(format!("workspace {}", String::from(name)))
         .output()
         .expect("Failed to execute i3-msg command")
 }
@@ -45,4 +45,37 @@ pub fn filter_workspaces<F>(f: F)
     }
 
     Some(ws)
+}
+
+pub fn is_focused_workspace_empty(config: &Config) -> bool {
+    if let Some(focused) = get_focused_workspace(config) {
+        if is_workspace_empty(WorkspaceName::format(&focused)) { // if the focused workspace is empty
+            if let Some(sub_ws) = filter_workspaces(|_, wsn| wsn.main_index == focused.main_index) {
+                // and it is the only workspace with it's main_index
+                if sub_ws.len() == 1 {
+                    return true;
+                }
+            }
+        }
+    }
+
+    false
+}
+
+pub fn is_workspace_empty(ws: String) -> bool {
+    let jq_arg = format!(".nodes[] \
+            | select(.name != \"__i3\") \
+            | .nodes[] \
+            | .nodes[] \
+            | select(.name == \"{}\") \
+            | .nodes[] \
+            | if .window != null then \"true\" else \"\" end", ws);
+    let i3msg = Command::new("i3-msg")
+        .args(["-t", "get_tree"]).stdout(Stdio::piped()).spawn().expect("Failed to execute i3-msg command");
+
+    let jq = Command::new("jq")
+        .arg(jq_arg)
+        .stdin(i3msg.stdout.unwrap()).output().expect("Failed to execute jq");
+
+    String::from_utf8_lossy(&jq.stdout) == String::from("")
 }
