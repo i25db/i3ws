@@ -53,14 +53,3 @@ impl From<&String> for WorkspaceName {
         }
     }
 }
-
-pub fn filter_workspaces<F>(workspaces: &Vec<json::Workspace>, f: F) -> Vec<WorkspaceName> where F: Fn(&&json::Workspace, WorkspaceName) -> bool {
-    workspaces.iter()
-        .filter(|ws| {
-            let wsn: WorkspaceName = WorkspaceName::from(&ws.name);
-            f(ws, wsn)
-        })
-        .map(|ws| {
-            WorkspaceName::from(&ws.name)
-        }).collect::<Vec<WorkspaceName>>()
-}

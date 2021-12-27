@@ -67,14 +67,15 @@ fn handle_new_command(new_type: &str, config: Config) {
             for commands in &ws_type.ws_commands {
                 focused.sub_index = commands.sub_ws.clone();
 
-                // go to the current sub workspace
-                commands::run_workspace_command(&focused);
-
                 // execute all the commands here
                 for command in &commands.commands {
                     println!("{}", command);
+                    // move container to the proper workspace
                 }
             }
+
+            focused.sub_index = ws_type.default_ws.clone();
+            commands::run_workspace_command(&focused);
         }
     }
 }

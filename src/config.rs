@@ -36,6 +36,7 @@ impl Default for Config {
         types.push(WorkspaceType {
             name: "plain".to_string(),
             growable: true,
+            default_ws: "1".to_string(),
             ws_commands: vec![
                 WorkspaceCommand { sub_ws: "1".to_string(), commands: vec![String::from(""),]},
                 WorkspaceCommand { sub_ws: "2".to_string(), commands: vec![String::from(""),]},
@@ -45,6 +46,7 @@ impl Default for Config {
         types.push(WorkspaceType {
             name: "code".to_string(),
             growable: false,
+            default_ws: "1".to_string(),
             ws_commands: vec![
                 WorkspaceCommand { sub_ws: "1".to_string(), commands: vec![String::from(""),]},
                 WorkspaceCommand { sub_ws: "2".to_string(), commands: vec![String::from(""),]},
@@ -54,6 +56,7 @@ impl Default for Config {
         types.push(WorkspaceType {
             name: "game".to_string(),
             growable: false,
+            default_ws: "1".to_string(),
             ws_commands: vec![
                 WorkspaceCommand { sub_ws: "1".to_string(), commands: vec![String::from(""),]},
                 WorkspaceCommand { sub_ws: "2".to_string(), commands: vec![String::from(""),]},
@@ -71,6 +74,7 @@ impl Default for Config {
 #[derive(Serialize, Deserialize)]
 pub struct WorkspaceType {
     pub name: String,
+    pub default_ws: String,
     pub growable: bool,
     pub ws_commands: Vec<WorkspaceCommand>
 }
