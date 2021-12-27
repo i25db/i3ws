@@ -1,6 +1,6 @@
-use serde::Serialize;
+pub(crate) use crate::json;
 use serde::Deserialize;
-pub use crate::json;
+use serde::Serialize;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Workspace {
@@ -11,7 +11,7 @@ pub struct Workspace {
     pub focused: bool,
     pub rect: Rect,
     pub output: String,
-    pub urgent: bool
+    pub urgent: bool,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -19,7 +19,7 @@ pub struct Rect {
     pub x: i32,
     pub y: i32,
     pub width: i32,
-    pub height: i32
+    pub height: i32,
 }
 
 pub fn parse_workspaces(json: &str) -> Vec<Workspace> {

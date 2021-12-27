@@ -1,18 +1,17 @@
-use serde::Serialize;
-use serde::Deserialize;
-
-pub use crate::config;
+use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
 pub struct Config {
     pub prefix: String,
     pub default_suffix: String,
-    pub types: Vec<WorkspaceType>
+    pub types: Vec<WorkspaceType>,
 }
 
 impl Config {
     pub fn get_type_names(&self) -> Vec<(usize, String)> {
-        self.types.iter().enumerate()
+        self.types
+            .iter()
+            .enumerate()
             .map(|(i, t)| (i, t.name.to_string()))
             .collect()
     }
@@ -22,8 +21,7 @@ impl Config {
 
         if let Some(pos) = pos {
             Some(&self.types[pos])
-        }
-        else {
+        } else {
             None
         }
     }
@@ -38,9 +36,15 @@ impl Default for Config {
             growable: true,
             default_ws: "1".to_string(),
             ws_commands: vec![
-                WorkspaceCommand { sub_ws: "1".to_string(), commands: vec![String::from(""),]},
-                WorkspaceCommand { sub_ws: "2".to_string(), commands: vec![String::from(""),]},
-            ]
+                WorkspaceCommand {
+                    sub_ws: "1".to_string(),
+                    commands: vec![String::from("")],
+                },
+                WorkspaceCommand {
+                    sub_ws: "2".to_string(),
+                    commands: vec![String::from("")],
+                },
+            ],
         });
 
         types.push(WorkspaceType {
@@ -48,9 +52,15 @@ impl Default for Config {
             growable: false,
             default_ws: "1".to_string(),
             ws_commands: vec![
-                WorkspaceCommand { sub_ws: "1".to_string(), commands: vec![String::from(""),]},
-                WorkspaceCommand { sub_ws: "2".to_string(), commands: vec![String::from(""),]},
-            ]
+                WorkspaceCommand {
+                    sub_ws: "1".to_string(),
+                    commands: vec![String::from("")],
+                },
+                WorkspaceCommand {
+                    sub_ws: "2".to_string(),
+                    commands: vec![String::from("")],
+                },
+            ],
         });
 
         types.push(WorkspaceType {
@@ -58,15 +68,21 @@ impl Default for Config {
             growable: false,
             default_ws: "1".to_string(),
             ws_commands: vec![
-                WorkspaceCommand { sub_ws: "1".to_string(), commands: vec![String::from(""),]},
-                WorkspaceCommand { sub_ws: "2".to_string(), commands: vec![String::from(""),]},
-            ]
+                WorkspaceCommand {
+                    sub_ws: "1".to_string(),
+                    commands: vec![String::from("")],
+                },
+                WorkspaceCommand {
+                    sub_ws: "2".to_string(),
+                    commands: vec![String::from("")],
+                },
+            ],
         });
 
         Self {
             prefix: "i3ws".to_string(),
             default_suffix: "plain".to_string(),
-            types
+            types,
         }
     }
 }
@@ -76,11 +92,11 @@ pub struct WorkspaceType {
     pub name: String,
     pub default_ws: String,
     pub growable: bool,
-    pub ws_commands: Vec<WorkspaceCommand>
+    pub ws_commands: Vec<WorkspaceCommand>,
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct WorkspaceCommand {
     pub sub_ws: String,
-    pub commands: Vec<String>
+    pub commands: Vec<String>,
 }

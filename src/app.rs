@@ -1,15 +1,15 @@
-use clap::{App, AppSettings, Arg, ArgSettings, ArgMatches, PossibleValue};
+use clap::{App, AppSettings, Arg, ArgMatches, ArgSettings, PossibleValue};
 
 use crate::commands;
 use crate::config::Config;
-use crate::workspace::{WorkspaceName};
+use crate::workspace::WorkspaceName;
 
 fn handle_main_command(index: String, config: Config) {
     // i3ws:{1}:1:plain
     let mut ws_command = WorkspaceName::with(config);
     ws_command.main_index = index;
 
-    let workspaces = commands::filter_workspaces(|_, wsn|  {
+    let workspaces = commands::filter_workspaces(|_, wsn| {
         wsn.main_index == ws_command.main_index && wsn.sub_index == ws_command.sub_index
     });
 
@@ -18,10 +18,10 @@ fn handle_main_command(index: String, config: Config) {
         // use the suffix from the existing workspace
         ws_command.suffix = workspaces[0].suffix.clone();
         commands::run_workspace_command(&ws_command);
-    }
-    else {
+    } else {
         // There is no i3ws{1}-1:xxx maybe there is i3ws{1}-2:xxx
-        let workspaces = commands::filter_workspaces(|_, wsn| wsn.main_index == ws_command.main_index);
+        let workspaces =
+            commands::filter_workspaces(|_, wsn| wsn.main_index == ws_command.main_index);
 
         if let Some(workspaces) = workspaces {
             // Use the sub workspace and suffix from the existing workspace
@@ -43,11 +43,12 @@ fn handle_sub_command(index: String, config: Config) {
         focused.sub_index = index.to_string();
 
         // Find if the target workspace exists
-        let target_ws = commands::filter_workspaces(|ws, _| ws.name == WorkspaceName::format(&focused));
+        let target_ws =
+            commands::filter_workspaces(|ws, _| ws.name == WorkspaceName::format(&focused));
 
         let growable = match config.get_type_by_name(focused.suffix.to_string()) {
             Some(n) => n.growable,
-            None => false
+            None => false,
         };
 
         // If the target workspace exists or is growable
@@ -97,11 +98,11 @@ pub fn handle_matches(config: Config) {
                     panic!("Invalid workspace");
                 }
             }
-        },
+        }
         Some(("new", sc_matches)) => {
             let new = sc_matches.value_of("new").unwrap();
             handle_new_command(new, config);
-        },
+        }
         Some(("default", _)) => {
             println!("{}", WorkspaceName::format(&WorkspaceName::with(config)));
         }
@@ -109,7 +110,6 @@ pub fn handle_matches(config: Config) {
             panic!("Unknown command");
         }
     }
-
 }
 
 pub fn get_matches(config: &Config) -> ArgMatches {
@@ -127,15 +127,15 @@ pub fn get_matches(config: &Config) -> ArgMatches {
                     Arg::new("workspace")
                         .takes_value(true)
                         .possible_values(["main", "sub"])
-                        .setting(ArgSettings::Required)
+                        .setting(ArgSettings::Required),
                 )
                 .arg(
                     Arg::new("index")
                         .takes_value(true)
                         .possible_values(["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"])
-                        .default_value("0")
-                    )
-                .setting(AppSettings::ArgRequiredElseHelp)
+                        .default_value("0"),
+                )
+                .setting(AppSettings::ArgRequiredElseHelp),
         )
         .subcommand(
             App::new("new")
@@ -144,16 +144,20 @@ pub fn get_matches(config: &Config) -> ArgMatches {
                 .arg(
                     Arg::new("new")
                         .takes_value(true)
-                        .possible_values(config.get_type_names().iter().map(|(_, t)| PossibleValue::new(t.as_str())).collect::<Vec<PossibleValue>>())
-                        .setting(ArgSettings::Required)
-                )
+                        .possible_values(
+                            config
+                                .get_type_names()
+                                .iter()
+                                .map(|(_, t)| PossibleValue::new(t.as_str()))
+                                .collect::<Vec<PossibleValue>>(),
+                        )
+                        .setting(ArgSettings::Required),
+                ),
         )
-
         .subcommand(
             App::new("default")
                 .short_flag('d')
-
-                .about("Prints the name of the default workspace")
+                .about("Prints the name of the default workspace"),
         )
         .get_matches()
 }
