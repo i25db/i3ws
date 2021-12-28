@@ -1,6 +1,6 @@
 pub(crate) use crate::commands;
-pub(crate) use std::process::{Command, Output, Stdio};
 use crate::{config::Config, json::*, workspace::WorkspaceName};
+pub(crate) use std::process::{Command, Output, Stdio};
 
 pub fn run_workspace_command(name: &WorkspaceName) -> Output {
     Command::new("i3-msg")

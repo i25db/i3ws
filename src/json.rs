@@ -23,5 +23,6 @@ pub struct Rect {
 }
 
 pub fn parse_workspaces(json: &str) -> Vec<Workspace> {
+    // TODO: Cache this command
     serde_json::from_str(json).expect("Unable to parse json")
 }

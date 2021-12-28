@@ -1,5 +1,25 @@
 pub(crate) use crate::config::Config;
 
+pub struct Query {
+    pub prefix: Option<String>,
+    pub main_index: Option<String>,
+    pub sub_index: Option<String>,
+    pub suffix: Option<String>,
+    pub name: Option<String>,
+}
+
+impl Default for Query {
+    fn default() -> Self {
+        Self {
+            prefix: None,
+            main_index: None,
+            sub_index: None,
+            suffix: None,
+            name: None,
+        }
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct WorkspaceName {
     pub prefix: String,
