@@ -1,9 +1,8 @@
-use serde::{Deserialize, Serialize};
-
-#[derive(Serialize, Deserialize)]
 pub struct Config {
     pub prefix: String,
     pub default_suffix: String,
+    pub default_main_index: String,
+    pub default_sub_index: String,
     pub types: Vec<WorkspaceType>,
 }
 
@@ -16,7 +15,8 @@ impl Config {
             .collect()
     }
 
-    pub fn get_type_by_name(&self, name: String) -> Option<&WorkspaceType> {
+    pub fn get_type_by_name(&self, name: &str) -> Option<&WorkspaceType> {
+        let name = name.to_string();
         let pos = self.types.iter().position(|t| t.name == name);
 
         if let Some(pos) = pos {
@@ -82,12 +82,13 @@ impl Default for Config {
         Self {
             prefix: "i3ws".to_string(),
             default_suffix: "plain".to_string(),
+            default_main_index: "1".to_string(),
+            default_sub_index: "1".to_string(),
             types,
         }
     }
 }
 
-#[derive(Serialize, Deserialize)]
 pub struct WorkspaceType {
     pub name: String,
     pub default_ws: String,
@@ -95,7 +96,6 @@ pub struct WorkspaceType {
     pub ws_commands: Vec<WorkspaceCommand>,
 }
 
-#[derive(Serialize, Deserialize)]
 pub struct WorkspaceCommand {
     pub sub_ws: String,
     pub commands: Vec<String>,
