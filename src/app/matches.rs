@@ -28,7 +28,17 @@ pub fn handle_matches(config: Config) {
         }
         Some(("swap", sc_matches)) => {
             let index = sc_matches.value_of("index").unwrap().to_string();
-            super::handle_swap_command(index, config);
+            let dest = sc_matches.value_of("dest").unwrap();
+
+            match dest {
+                "sub" => {
+                    super::handle_sub_swap_command(index, config);
+                }
+                "main" => {
+                    super::handle_main_swap_command(index, config);
+                }
+                dest => panic!("Unknown destination: {}", dest),
+            };
         }
         Some(("default", _)) => {
             println!("{}", Workspace::from(config).get_name());
@@ -84,14 +94,20 @@ fn get_matches(config: &Config) -> ArgMatches {
         .subcommand(
             App::new("swap")
                 .short_flag('s')
-                .about("Swaps the current workspace with the given main workspace")
+                .about("Swaps the current workspace with the given workspace")
+                .arg(
+                    Arg::new("dest")
+                        .short('d')
+                        .takes_value(true)
+                        .possible_values(["main", "sub"])
+                        .default_value("sub"),
+                )
                 .arg(
                     Arg::new("index")
                         .takes_value(true)
                         .possible_values(["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"])
                         .default_value("0"),
-                )
-                .setting(AppSettings::ArgRequiredElseHelp),
+                ),
         )
         .subcommand(
             App::new("default")

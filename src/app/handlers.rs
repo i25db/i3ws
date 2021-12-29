@@ -69,43 +69,84 @@ pub fn handle_new_command(new_type: String, config: Config) {
     }
 }
 
-pub fn handle_swap_command(index: String, config: Config) {
-    // 1) Check if [index]:* exists
-    //  a. If it does copy all [index]:*:suffix ->  [swap_prefix]:[index]:*:suffix
+pub fn handle_sub_swap_command(index: String, config: Config) {
+    // 1) Check if *:[focused]:[index]:* exists
+    //  a. If it does move it to [swap_prefix]:[focused]:[index]:*
+    if let Some(focused) = query_first(|ws| ws.focused) {
+        if let Some(dest) =
+            query_first(|ws| &ws.main_index == &focused.main_index && &ws.sub_index == &index)
+        {
+            let mut tmp = dest.clone();
+            tmp.prefix = config.default_swap_prefix.clone();
+
+            move_workspace(&dest.get_name(), &tmp.get_name(), false);
+        }
+
+        // 2) Copy *:[focused]:[focused]:* -> *:[focused]:[index]:*
+        let mut tmp = focused.clone();
+        tmp.sub_index = index.clone();
+
+        move_workspace(&focused.get_name(), &tmp.get_name(), config.swap_on_sub);
+
+        // 3) Copy [swap_prefix]:*:*:* -> *:[focused]:[focused]:*
+        if let Some(swap) = query_first(|ws| &ws.prefix == &config.default_swap_prefix) {
+            let mut tmp = swap.clone();
+            tmp.prefix = config.default_prefix.clone();
+            tmp.sub_index = focused.sub_index;
+
+            move_workspace(&swap.get_name(), &tmp.get_name(), !config.swap_on_sub);
+        }
+    }
+}
+
+pub fn handle_main_swap_command(index: String, config: Config) {
+    // 1) Check if *:*:[index]:* exists
+    //  a. If it does copy all *:[index]:*:* ->  [swap_prefix]:[index]:*:*
     if let Some(dest) = query(|ws| &ws.main_index == &index) {
+        // println!("Found {} in destination", dest[0].get_name());
         for ws in &dest {
             let mut tmp = ws.clone();
             tmp.prefix = config.default_swap_prefix.clone();
 
+            // println!("  Moving {} to {}", &ws.get_name(), &tmp.get_name());
             move_workspace(&ws.get_name(), &tmp.get_name(), false);
         }
     }
     // 2) Copy all [default_prefix]:[focused]:* -> [index]:*
     if let Some(focused) = query_first(|ws| ws.focused) {
+        let origin_main_index = focused.main_index.clone();
         let origin_sub_index = focused.sub_index.clone();
 
-        if let Some(focused) =
-            query(|ws| &ws.main_index == &focused.main_index && &ws.prefix == &config.prefix)
-        {
+        if let Some(focused) = query(|ws| {
+            &ws.main_index == &focused.main_index && &ws.prefix == &config.default_prefix
+        }) {
+            // println!("Copying {} to destination", focused[0].get_name());
             for ws in &focused {
                 let mut tmp = ws.clone();
                 tmp.main_index = index.clone();
 
+                // println!("  Copying {} to {}", &ws.get_name(), &tmp.get_name());
+
                 move_workspace(
                     &ws.get_name(),
                     &tmp.get_name(),
-                    ws.sub_index == origin_sub_index,
+                    ws.sub_index == origin_sub_index && config.swap_on_main,
                 );
             }
         }
 
-        // 3) Copy all i3wssap -> [prefix]:[focused]:*:*
+        // 3) Copy all i3wsswap -> [prefix]:[focused]:*:*
         if let Some(swaps) = query(|ws| &ws.prefix == &config.default_swap_prefix) {
+            // println!("Swapping {} to origin", swaps[0].get_name());
             for swap in &swaps {
                 let mut tmp = swap.clone();
-                tmp.prefix = config.prefix.clone();
+                tmp.prefix = config.default_prefix.clone();
+                tmp.main_index = origin_main_index.clone();
 
-                move_workspace(&swap.get_name(), &tmp.get_name(), false);
+                // println!("  Swapping {} to {}", &swap.get_name(), &tmp.get_name());
+
+                // TODO: if swap_on_main go back to original sub workspace
+                move_workspace(&swap.get_name(), &tmp.get_name(), !config.swap_on_main);
             }
         }
     }
