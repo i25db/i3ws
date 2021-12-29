@@ -108,3 +108,5 @@ fn handle_new_command(new_type: &str, config: Config) {
         }
     }
 }
+
+fn handle_swap_command(index: String, config: Config) {}
