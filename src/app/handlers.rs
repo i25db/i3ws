@@ -14,7 +14,7 @@ pub fn handle_main_command(index: String, config: Config) {
     // if the default workspace exists activate it
     if let Some(ws) = q {
         workspace.suffix = ws.suffix;
-        run_workspace_command(workspace);
+        activate_workspace(&workspace.get_name());
     } else {
         // There is no [prefix]:[main]:1, check for [prefix]:[main]:(2..0)
         let workspaces = query_first(&Query {
@@ -27,11 +27,11 @@ pub fn handle_main_command(index: String, config: Config) {
             workspace.sub_index = ws.sub_index;
             workspace.suffix = ws.suffix;
 
-            run_workspace_command(workspace);
+            activate_workspace(&workspace.get_name());
         }
         // else workspace doesn't exist yet, make default workspace
         else {
-            run_workspace_command(workspace);
+            activate_workspace(&workspace.get_name());
         }
     }
 }
@@ -56,7 +56,7 @@ pub fn handle_sub_command(index: String, config: Config) {
 
         // If the target workspace exists or is growable
         if target.is_some() || growable {
-            run_workspace_command(focused);
+            activate_workspace(&focused.get_name());
         }
     }
 }
@@ -77,10 +77,15 @@ pub fn handle_new_command(new_type: String, config: Config) {
                 }
 
                 focused.sub_index = ws_type.default_ws.to_string();
-                run_workspace_command(focused);
+                activate_workspace(&focused.get_name());
             }
         }
     }
 }
 
-pub fn handle_swap_command(index: String, config: Config) {}
+pub fn handle_swap_command(index: String, config: Config) {
+    // 1) Check if [index]:* exists
+    //  a. If it does copy all [index]:*:prefix ->  i3wsswap:[index]:*:prefix
+    // 2) Copy all [focused]:* -> [index]:*
+    // 3) Copy all i3wssap -> [prefix]:[focused]:*:*
+}

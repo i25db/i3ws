@@ -2,11 +2,24 @@ use crate::workspace::{self, Workspace};
 
 use std::process::{Command, Output, Stdio};
 
-pub fn run_workspace_command(ws: Workspace) -> Output {
+pub fn activate_workspace(ws: &str) {
     Command::new("i3-msg")
-        .arg(format!("workspace {}", ws.get_name()))
+        .arg(format!("workspace {}", ws))
         .output()
-        .expect("Failed to execute i3-msg command")
+        .expect("Failed to execute i3-msg command");
+}
+
+pub fn move_workspace(source: &str, dest: &str, focus_dest: bool) {
+    let mut arg = format!("[workspace={}] move to workspace {}", source, dest);
+
+    if focus_dest {
+        arg.push_str(&format!(", workspace {}", dest))
+    }
+
+    Command::new("i3-msg")
+        .arg(arg)
+        .output()
+        .expect("Failed to execute i3-msg command");
 }
 
 pub fn get_workspaces() -> Vec<Workspace> {
