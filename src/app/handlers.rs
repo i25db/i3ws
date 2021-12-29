@@ -1,19 +1,8 @@
-mod matches;
-pub use matches::handle_matches;
-
 use crate::commands::*;
 use crate::config::Config;
 use crate::workspace::Workspace;
 
-/// Handle [main] subcommand
-/// Starts by looking for [prefix]:[main]:1: and if it exists
-/// activates the workspace. Otherwise, find a workspace that
-/// shares the same [main] index. If it can't find that either
-/// create a new default workspace.
-/// # Arguments
-/// - `index` - the name of the main workspace
-/// - `config` - the configuration for the whole app
-fn handle_main_command(index: String, config: Config) {
+pub fn handle_main_command(index: String, config: Config) {
     let mut workspace = Workspace::from(config);
     workspace.main_index = index;
 
@@ -47,13 +36,7 @@ fn handle_main_command(index: String, config: Config) {
     }
 }
 
-/// Handle [sub] subcommand
-/// Looks for [prefix]:[focused]:[index]:. If it exists or
-/// is part of a growable workspace activate it.
-/// # Arguments
-/// - `index` - the name of the sub workspace
-/// - `config` - the configuration for the whole app
-fn handle_sub_command(index: String, config: Config) {
+pub fn handle_sub_command(index: String, config: Config) {
     if let Some(mut focused) = query_first(&Query {
         focused: Some(true),
         ..Default::default()
@@ -78,23 +61,14 @@ fn handle_sub_command(index: String, config: Config) {
     }
 }
 
-/// Handle [new] subcommand
-/// If `new_type` is defined in `config` then find the
-/// focused workspace and if its empty create a new
-/// workspace. Once all startup commands are executed
-/// activates the default sub workspace.
-/// # Arguments
-/// - `new_type` - the type of new workspace to create.
-/// Should be one of `config.get_type_names()`
-/// - `config` - the configuration for the whole app
-fn handle_new_command(new_type: &str, config: Config) {
+pub fn handle_new_command(new_type: String, config: Config) {
     if let Some(mut focused) = query_first(&Query {
         focused: Some(true),
         ..Default::default()
     }) {
         if is_workspace_empty(focused.get_name()) {
             if let Some(ws_type) = config.get_type_by_name(&new_type) {
-                focused.suffix = new_type.to_string();
+                focused.suffix = new_type;
 
                 for commands in &ws_type.ws_commands {
                     for command in &commands.commands {
@@ -109,4 +83,4 @@ fn handle_new_command(new_type: &str, config: Config) {
     }
 }
 
-fn handle_swap_command(index: String, config: Config) {}
+pub fn handle_swap_command(index: String, config: Config) {}

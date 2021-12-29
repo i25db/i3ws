@@ -23,7 +23,7 @@ pub fn handle_matches(config: Config) {
             }
         }
         Some(("new", sc_matches)) => {
-            let new = sc_matches.value_of("new").unwrap();
+            let new = sc_matches.value_of("new").unwrap().to_string();
             super::handle_new_command(new, config);
         }
         Some(("swap", sc_matches)) => {
