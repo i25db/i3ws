@@ -60,7 +60,7 @@ impl<I: Into<String>> From<I> for Workspace {
         let split: Vec<&str> = name.split(':').collect();
 
         if split.len() != 4 {
-            panic!("Workspace '{}' can't be parsed", name);
+            return Workspace::from(Config::default());
         }
 
         Self {
