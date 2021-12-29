@@ -18,7 +18,7 @@ Copy the binary `target/release/i3ws` to some location in your path
 This command will navigate to either the first sub workspace of an existing main workspace, or a sub workspace of the currently focused main workspace
 - **i3ws [-n | new] [plain | code | game]** <br/>
 If the current main workspace (including all of its subworkspaces) has no windows open this will load a preset into the main workspace
-- **i3ws [-s | swap] [main | sub] [index]** <br/>
+- **i3ws [-s | swap] [main | sub] -d [index]** <br/>
 Swaps the focused main or sub workspace with the given main or sub index
 - **i3ws -d** <br/>
 Goes to the default workspace
