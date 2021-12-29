@@ -17,9 +17,11 @@ Copy the binary `target/release/i3ws` to some location in your path
 - **i3ws [-g | go] [main | sub] [index]** <br/>
 This command will navigate to either the first sub workspace of an existing main workspace, or a sub workspace of the currently focused main workspace
 - **i3ws [-n | new] [plain | code | game]** <br/>
-If the current main workspace (including all of its subworkspaces) have no windows open this will load a preset into the main workspace
+If the current main workspace (including all of its subworkspaces) has no windows open this will load a preset into the main workspace
+- **i3ws [-s | swap] [main | sub] -d [index]** <br/>
+Swaps the focused main or sub workspace with the given main or sub index
 - **i3ws -d** <br/>
-Gets the default main workspace name. Can be used to rename the workspace on startup. (i.e. in your i3 config `exec --no-startup-id "i3-msg workspace ${i3ws -d}"`)
+Goes to the default workspace
 ## Configuration
 No support for configuration. Definitely planned though
 ## TODO
@@ -28,6 +30,6 @@ No support for configuration. Definitely planned though
 - [x] Create workspace preset
 - [ ] Start applications when creating a preset
 - [ ] Move and swap main/sub workspaces
-- [ ] Make it configurable
-- [ ] Output something nice so things like polybar, eww, etc... can use
+- [x] Make it configurable
+- [ ] Output something nice that things like polybar, eww, etc... can use
 - [ ] Create an install script
