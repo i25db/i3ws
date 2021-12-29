@@ -56,13 +56,9 @@ pub fn handle_new_command(new_type: String, config: Config) {
             if let Some(ws_type) = config.get_type_by_name(&new_type) {
                 focused.suffix = new_type;
 
-                for commands in &ws_type.ws_commands {
-                    for command in &commands.commands {
-                        println!("{}", command);
-                    }
-                }
+                for (_ws, _command) in &ws_type.commands {}
 
-                focused.sub_index = ws_type.default_ws.to_string();
+                focused.sub_index = ws_type.default_sub_workspace.to_string();
                 activate_workspace(&focused.get_name());
             }
         }
@@ -73,28 +69,30 @@ pub fn handle_sub_swap_command(index: String, config: Config) {
     // 1) Check if *:[focused]:[index]:* exists
     //  a. If it does move it to [swap_prefix]:[focused]:[index]:*
     if let Some(focused) = query_first(|ws| ws.focused) {
-        if let Some(dest) =
-            query_first(|ws| &ws.main_index == &focused.main_index && &ws.sub_index == &index)
-        {
-            let mut tmp = dest.clone();
-            tmp.prefix = config.default_swap_prefix.clone();
+        if focused.prefix == config.default_prefix && config.swap_on_default_only {
+            if let Some(dest) =
+                query_first(|ws| &ws.main_index == &focused.main_index && &ws.sub_index == &index)
+            {
+                let mut tmp = dest.clone();
+                tmp.prefix = config.default_swap_prefix.clone();
 
-            move_workspace(&dest.get_name(), &tmp.get_name(), false);
-        }
+                move_workspace(&dest.get_name(), &tmp.get_name(), false);
+            }
 
-        // 2) Copy *:[focused]:[focused]:* -> *:[focused]:[index]:*
-        let mut tmp = focused.clone();
-        tmp.sub_index = index.clone();
+            // 2) Copy *:[focused]:[focused]:* -> *:[focused]:[index]:*
+            let mut tmp = focused.clone();
+            tmp.sub_index = index.clone();
 
-        move_workspace(&focused.get_name(), &tmp.get_name(), config.swap_on_sub);
+            move_workspace(&focused.get_name(), &tmp.get_name(), config.swap_on_sub);
 
-        // 3) Copy [swap_prefix]:*:*:* -> *:[focused]:[focused]:*
-        if let Some(swap) = query_first(|ws| &ws.prefix == &config.default_swap_prefix) {
-            let mut tmp = swap.clone();
-            tmp.prefix = config.default_prefix.clone();
-            tmp.sub_index = focused.sub_index;
+            // 3) Copy [swap_prefix]:*:*:* -> *:[focused]:[focused]:*
+            if let Some(swap) = query_first(|ws| &ws.prefix == &config.default_swap_prefix) {
+                let mut tmp = swap.clone();
+                tmp.prefix = config.default_prefix.clone();
+                tmp.sub_index = focused.sub_index;
 
-            move_workspace(&swap.get_name(), &tmp.get_name(), !config.swap_on_sub);
+                move_workspace(&swap.get_name(), &tmp.get_name(), !config.swap_on_sub);
+            }
         }
     }
 }
