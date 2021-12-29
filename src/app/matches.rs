@@ -43,7 +43,7 @@ pub fn handle_matches(config: Config) {
             };
         }
         Some(("default", _)) => {
-            println!("{}", Workspace::from(config).get_name());
+            crate::commands::activate_workspace(&Workspace::from(config).get_name());
         }
         _ => {
             panic!("Unknown command");
@@ -71,8 +71,7 @@ fn get_matches(config: &Config) -> ArgMatches {
                 .arg(
                     Arg::new("index")
                         .takes_value(true)
-                        .possible_values(["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"])
-                        .default_value("0"),
+                        .possible_values(["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]),
                 )
                 .setting(AppSettings::ArgRequiredElseHelp),
         )
