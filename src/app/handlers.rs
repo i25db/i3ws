@@ -149,3 +149,45 @@ pub fn handle_main_swap_command(index: String, config: Config) {
         }
     }
 }
+
+pub fn handle_info_command(t: &str, config: Config) {
+    match t {
+        "current" => {
+            let current = query_first(|ws| ws.focused);
+
+            if let Some(current) = current {
+                println!("{}", current.main_index);
+            } else {
+                panic!("Found no focused workspace");
+            }
+        }
+        "all_subs" => {
+            let current = query_first(|ws| ws.focused);
+
+            if let Some(current) = current {
+                if let Some(subs) = query(|ws| {
+                    &ws.prefix == &config.default_prefix
+                        && &ws.main_index == &current.main_index
+                        && &ws.sub_index != &current.sub_index
+                }) {
+                    let first = true;
+
+                    for sub in &subs {
+                        if first {
+                            print!("{}", sub.sub_index)
+                        } else {
+                            print!(",{}", sub.sub_index);
+                        }
+                    }
+
+                    println!();
+                }
+            } else {
+                panic!("Found no focused workspace");
+            }
+        }
+        t => {
+            panic!("Unknown info type: {}", t);
+        }
+    }
+}

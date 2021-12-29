@@ -48,7 +48,7 @@ impl From<Config> for Workspace {
             prefix: cfg.default_prefix,
             main_index: cfg.default_main_index,
             sub_index: cfg.default_sub_index,
-            suffix: cfg.default_suffix,
+            suffix: cfg.default_type,
             focused: false,
         }
     }

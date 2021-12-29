@@ -1,0 +1,43 @@
+[Config]
+default_prefix = "i3ws"
+default_type = "plain"
+default_swap_prefix = "i3wsswap"
+default_main_index = 1
+default_sub_index = 1
+
+# when swapping sub workspaces, whether or not focus will stay the same
+swap_on_sub = false
+
+# when swapping main workspaces, whether or not focus will stay the same
+swap_on_main = true
+
+# idk what this does. Something like enable/disable subspace swapping
+swap_on_default_only = true
+
+[Types.plain]
+# The name that will be displayed for this type. If left empty it will
+# assume its index as its name
+# Possible formats:
+# {main-index}
+# {sub-index}2
+# {type}
+name = "{index}"
+
+# Same as above but displays if focused
+name_focused = "{index}f"
+
+# When this workspace is created this will be the focused sub workspace
+default_sub_workspace = 1
+
+# This setting only applies if this is the default_type. When set to 
+# to true will execute its commands even when being swapped in
+execute_on_move = false
+
+# Whether or not new sub workspaces can be spawned index
+growable = true
+
+# Commands to execute when creating a new workspace. Keys are the
+#  sub workspace index where the commands will be run
+[Types.plain.commands]
+1 = ["kitty -d ~"]
+2 = ["qutebrowser"]
