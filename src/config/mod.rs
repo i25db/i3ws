@@ -1,6 +1,7 @@
 pub struct Config {
     pub prefix: String,
     pub default_suffix: String,
+    pub default_swap_prefix: String,
     pub default_main_index: String,
     pub default_sub_index: String,
     pub types: Vec<WorkspaceType>,
@@ -82,6 +83,7 @@ impl Default for Config {
         Self {
             prefix: "i3ws".to_string(),
             default_suffix: "plain".to_string(),
+            default_swap_prefix: "i3wsswap".to_string(),
             default_main_index: "1".to_string(),
             default_sub_index: "1".to_string(),
             types,

@@ -1,6 +1,6 @@
 use crate::workspace::{self, Workspace};
 
-use std::process::{Command, Output, Stdio};
+use std::process::{Command, Stdio};
 
 pub fn activate_workspace(ws: &str) {
     Command::new("i3-msg")
