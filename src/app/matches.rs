@@ -78,6 +78,18 @@ fn get_matches(config: &Config) -> ArgMatches {
                 ),
         )
         .subcommand(
+            App::new("swap")
+                .short_flag('s')
+                .about("Swaps the current workspace with the given main workspace")
+                .arg(
+                    Arg::new("index")
+                        .takes_value(true)
+                        .possible_values(["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"])
+                        .default_value("0"),
+                )
+                .setting(AppSettings::ArgRequiredElseHelp),
+        )
+        .subcommand(
             App::new("default")
                 .short_flag('d')
                 .about("Prints the name of the default workspace"),
