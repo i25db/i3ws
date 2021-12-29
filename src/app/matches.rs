@@ -26,6 +26,7 @@ pub fn handle_matches(config: Config) {
             let new = sc_matches.value_of("new").unwrap();
             super::handle_new_command(new, config);
         }
+        Some(("swap", _sc_matches)) => {}
         Some(("default", _)) => {
             println!("{}", Workspace::from(config).get_name());
         }
