@@ -42,6 +42,11 @@ pub fn handle_matches(config: Config) {
                 dest => panic!("Unknown destination: {}", dest),
             };
         }
+        Some(("info", sc_matches)) => {
+            let t = sc_matches.value_of("type").unwrap();
+
+            super::handle_info_command(t, config);
+        }
         Some(("default", _)) => {
             crate::commands::activate_workspace(&Workspace::from(config).get_name());
         }
@@ -114,6 +119,16 @@ fn get_matches(config: &Config) -> ArgMatches {
             App::new("default")
                 .short_flag('d')
                 .about("Prints the name of the default workspace"),
+        )
+        .subcommand(
+            App::new("info")
+                .about("Prints info about the current workspaces")
+                .arg(
+                    Arg::new("type")
+                        .takes_value(true)
+                        .possible_values(["current", "all_subs"])
+                        .required(true),
+                ),
         )
         .get_matches()
 }

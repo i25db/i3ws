@@ -29,7 +29,7 @@ No support for configuration. Definitely planned though
 - [x] Manage sub workspaces
 - [x] Create workspace preset
 - [ ] Start applications when creating a preset
-- [ ] Move and swap main/sub workspaces
-- [x] Make it configurable
+- [x] Move and swap main/sub workspaces
+- [ ] Make it configurable
 - [ ] Output something nice that things like polybar, eww, etc... can use
 - [ ] Create an install script
