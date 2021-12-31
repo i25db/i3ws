@@ -8,7 +8,11 @@ pub fn handle_matches(config: Config) {
     match get_matches(&config).subcommand() {
         Some(("go", sc_matches)) => {
             let workspace = sc_matches.value_of("workspace").unwrap();
-            let index = sc_matches.value_of("index").unwrap().to_string();
+            let index = sc_matches
+                .value_of("index")
+                .unwrap()
+                .parse::<u32>()
+                .unwrap();
 
             match workspace {
                 "main" => {
@@ -29,7 +33,11 @@ pub fn handle_matches(config: Config) {
             super::handle_new_command(new, config);
         }
         Some(("swap", sc_matches)) => {
-            let index = sc_matches.value_of("index").unwrap().to_string();
+            let index = sc_matches
+                .value_of("index")
+                .unwrap()
+                .parse::<u32>()
+                .unwrap();
             let dest = sc_matches.value_of("dest").unwrap();
 
             match dest {
@@ -126,8 +134,8 @@ fn get_matches(config: &Config) -> ArgMatches {
                 .arg(
                     Arg::new("type")
                         .takes_value(true)
-                        .possible_values(["current", "all_subs"])
-                        .required(true),
+                        .possible_values(["current", "all_mains", "all_subs"])
+                        .default_value("current"),
                 ),
         )
         .get_matches()

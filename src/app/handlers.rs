@@ -1,8 +1,10 @@
+use std::cmp::Ordering;
+
 use crate::commands::*;
 use crate::config::Config;
 use crate::workspace::Workspace;
 
-pub fn handle_main_command(index: String, config: Config) {
+pub fn handle_main_command(index: u32, config: Config) {
     let mut main_ws = Workspace::from(config);
     main_ws.main_index = index;
 
@@ -30,7 +32,7 @@ pub fn handle_main_command(index: String, config: Config) {
     }
 }
 
-pub fn handle_sub_command(index: String, config: Config) {
+pub fn handle_sub_command(index: u32, config: Config) {
     if let Some(mut focused) = query_first(|ws| ws.focused) {
         focused.sub_index = index;
 
@@ -58,14 +60,14 @@ pub fn handle_new_command(new_type: String, config: Config) {
 
                 for (_ws, _command) in &ws_type.commands {}
 
-                focused.sub_index = ws_type.default_sub_workspace.to_string();
+                focused.sub_index = ws_type.default_sub_workspace;
                 activate_workspace(&focused.get_name());
             }
         }
     }
 }
 
-pub fn handle_sub_swap_command(index: String, config: Config) {
+pub fn handle_sub_swap_command(index: u32, config: Config) {
     // 1) Check if *:[focused]:[index]:* exists
     //  a. If it does move it to [swap_prefix]:[focused]:[index]:*
     if let Some(focused) = query_first(|ws| ws.focused) {
@@ -81,14 +83,14 @@ pub fn handle_sub_swap_command(index: String, config: Config) {
 
             // 2) Copy *:[focused]:[focused]:* -> *:[focused]:[index]:*
             let mut tmp = focused.clone();
-            tmp.sub_index = index.clone();
+            tmp.sub_index = index;
 
             move_workspace(&focused.get_name(), &tmp.get_name(), config.swap_on_sub);
 
             // 3) Copy [swap_prefix]:*:*:* -> *:[focused]:[focused]:*
             if let Some(swap) = query_first(|ws| &ws.prefix == &config.default_swap_prefix) {
                 let mut tmp = swap.clone();
-                tmp.prefix = config.default_prefix.clone();
+                tmp.prefix = config.default_prefix;
                 tmp.sub_index = focused.sub_index;
 
                 move_workspace(&swap.get_name(), &tmp.get_name(), !config.swap_on_sub);
@@ -97,7 +99,7 @@ pub fn handle_sub_swap_command(index: String, config: Config) {
     }
 }
 
-pub fn handle_main_swap_command(index: String, config: Config) {
+pub fn handle_main_swap_command(index: u32, config: Config) {
     // 1) Check if *:*:[index]:* exists
     //  a. If it does copy all *:[index]:*:* ->  [swap_prefix]:[index]:*:*
     if let Some(dest) = query(|ws| &ws.main_index == &index) {
@@ -112,8 +114,8 @@ pub fn handle_main_swap_command(index: String, config: Config) {
     }
     // 2) Copy all [default_prefix]:[focused]:* -> [index]:*
     if let Some(focused) = query_first(|ws| ws.focused) {
-        let origin_main_index = focused.main_index.clone();
-        let origin_sub_index = focused.sub_index.clone();
+        let origin_main_index = focused.main_index;
+        let origin_sub_index = focused.sub_index;
 
         if let Some(focused) = query(|ws| {
             &ws.main_index == &focused.main_index && &ws.prefix == &config.default_prefix
@@ -121,7 +123,7 @@ pub fn handle_main_swap_command(index: String, config: Config) {
             // println!("Copying {} to destination", focused[0].get_name());
             for ws in &focused {
                 let mut tmp = ws.clone();
-                tmp.main_index = index.clone();
+                tmp.main_index = index;
 
                 // println!("  Copying {} to {}", &ws.get_name(), &tmp.get_name());
 
@@ -139,7 +141,7 @@ pub fn handle_main_swap_command(index: String, config: Config) {
             for swap in &swaps {
                 let mut tmp = swap.clone();
                 tmp.prefix = config.default_prefix.clone();
-                tmp.main_index = origin_main_index.clone();
+                tmp.main_index = origin_main_index;
 
                 // println!("  Swapping {} to {}", &swap.get_name(), &tmp.get_name());
 
@@ -153,38 +155,92 @@ pub fn handle_main_swap_command(index: String, config: Config) {
 pub fn handle_info_command(t: &str, config: Config) {
     match t {
         "current" => {
-            let current = query_first(|ws| ws.focused);
+            let current = query_first(|ws| ws.focused).expect("Found no focused workspace");
 
-            if let Some(current) = current {
-                println!("{}", current.main_index);
-            } else {
-                panic!("Found no focused workspace");
+            let format = &config
+                .get_type_by_name(&current.suffix)
+                .expect("Current workspace does not have a type")
+                .display_name;
+            println!(
+                "{}",
+                format.replace("{index}", &current.main_index.to_string())
+            );
+        }
+        "all_mains" => {
+            let focused_index = query_first(|ws| ws.focused)
+                .expect("Found no focused workspace")
+                .main_index;
+
+            let mut main_indexes: Vec<u32> = Vec::new();
+            let mut workspaces = query(|ws| {
+                if main_indexes.contains(&ws.main_index) {
+                    return false;
+                }
+
+                main_indexes.push(ws.main_index);
+                return true;
+            })
+            .expect("Found no workspaces");
+            workspaces.sort_by(|a, b| {
+                if a.main_index == focused_index {
+                    Ordering::Less
+                } else if b.main_index == focused_index {
+                    Ordering::Greater
+                } else {
+                    a.main_index.cmp(&b.main_index)
+                }
+            });
+
+            let mut first = true;
+            for ws in &workspaces {
+                let format = &config
+                    .get_type_by_name(&ws.suffix)
+                    .expect("Current workspace does not have a type")
+                    .display_name;
+                let format = format.replace("{index}", &ws.main_index.to_string());
+
+                if first {
+                    print!("{}", format)
+                } else {
+                    print!("|{}", format);
+                }
+
+                first = false;
             }
+            println!();
         }
         "all_subs" => {
-            let current = query_first(|ws| ws.focused);
+            let current = query_first(|ws| ws.focused).expect("Found no focused workspace");
+            let mut subs: Vec<Workspace> = query(|ws| {
+                &ws.prefix == &config.default_prefix && ws.main_index == current.main_index
+            })
+            .unwrap_or(Vec::<Workspace>::new());
 
-            if let Some(current) = current {
-                if let Some(subs) = query(|ws| {
-                    &ws.prefix == &config.default_prefix
-                        && &ws.main_index == &current.main_index
-                        && &ws.sub_index != &current.sub_index
-                }) {
-                    let first = true;
+            subs.sort_by(|a, b| a.sub_index.cmp(&b.sub_index));
 
-                    for sub in &subs {
-                        if first {
-                            print!("{}", sub.sub_index)
-                        } else {
-                            print!(",{}", sub.sub_index);
-                        }
-                    }
+            let mut first = true;
 
-                    println!();
+            for sub in &subs {
+                let format = &config
+                    .get_type_by_name(&sub.suffix)
+                    .expect("Current sub workspace does not have a type")
+                    .sub_display_name;
+                let mut format = format.replace("{index}", &sub.sub_index.to_string());
+
+                if sub.focused {
+                    format = format!("**{}", format);
                 }
-            } else {
-                panic!("Found no focused workspace");
+
+                if first {
+                    print!("{}", format)
+                } else {
+                    print!("|{}", format);
+                }
+
+                first = false;
             }
+
+            println!();
         }
         t => {
             panic!("Unknown info type: {}", t);

@@ -27,8 +27,8 @@ pub fn parse_workspaces(json: &str) -> Vec<Workspace> {
 #[derive(Clone)]
 pub struct Workspace {
     pub prefix: String,
-    pub main_index: String,
-    pub sub_index: String,
+    pub main_index: u32,
+    pub sub_index: u32,
     pub suffix: String,
     pub focused: bool,
 }
@@ -63,10 +63,17 @@ impl<I: Into<String>> From<I> for Workspace {
             return Workspace::from(Config::default());
         }
 
+        let main_index = split[1]
+            .parse::<u32>()
+            .unwrap_or(Config::default().default_main_index);
+        let sub_index = split[2]
+            .parse::<u32>()
+            .unwrap_or(Config::default().default_sub_index);
+
         Self {
             prefix: split[0].to_string(),
-            main_index: split[1].to_string(),
-            sub_index: split[2].to_string(),
+            main_index,
+            sub_index,
             suffix: split[3].to_string(),
             focused: false,
         }
