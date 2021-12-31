@@ -1,5 +1,6 @@
 use std::cmp::Ordering;
 
+
 use crate::commands::*;
 use crate::config::Config;
 use crate::workspace::Workspace;
@@ -33,6 +34,7 @@ pub fn handle_main_command(index: u32, config: Config) {
 }
 
 pub fn handle_sub_command(index: u32, config: Config) {
+
     if let Some(mut focused) = query_first(|ws| ws.focused) {
         focused.sub_index = index;
 
@@ -85,12 +87,14 @@ pub fn handle_sub_swap_command(index: u32, config: Config) {
             let mut tmp = focused.clone();
             tmp.sub_index = index;
 
+
             move_workspace(&focused.get_name(), &tmp.get_name(), config.swap_on_sub);
 
             // 3) Copy [swap_prefix]:*:*:* -> *:[focused]:[focused]:*
             if let Some(swap) = query_first(|ws| &ws.prefix == &config.default_swap_prefix) {
                 let mut tmp = swap.clone();
                 tmp.prefix = config.default_prefix;
+
                 tmp.sub_index = focused.sub_index;
 
                 move_workspace(&swap.get_name(), &tmp.get_name(), !config.swap_on_sub);
@@ -100,6 +104,7 @@ pub fn handle_sub_swap_command(index: u32, config: Config) {
 }
 
 pub fn handle_main_swap_command(index: u32, config: Config) {
+
     // 1) Check if *:*:[index]:* exists
     //  a. If it does copy all *:[index]:*:* ->  [swap_prefix]:[index]:*:*
     if let Some(dest) = query(|ws| &ws.main_index == &index) {
@@ -117,6 +122,7 @@ pub fn handle_main_swap_command(index: u32, config: Config) {
         let origin_main_index = focused.main_index;
         let origin_sub_index = focused.sub_index;
 
+
         if let Some(focused) = query(|ws| {
             &ws.main_index == &focused.main_index && &ws.prefix == &config.default_prefix
         }) {
@@ -124,6 +130,7 @@ pub fn handle_main_swap_command(index: u32, config: Config) {
             for ws in &focused {
                 let mut tmp = ws.clone();
                 tmp.main_index = index;
+
 
                 // println!("  Copying {} to {}", &ws.get_name(), &tmp.get_name());
 
@@ -142,6 +149,7 @@ pub fn handle_main_swap_command(index: u32, config: Config) {
                 let mut tmp = swap.clone();
                 tmp.prefix = config.default_prefix.clone();
                 tmp.main_index = origin_main_index;
+
 
                 // println!("  Swapping {} to {}", &swap.get_name(), &tmp.get_name());
 
