@@ -61,8 +61,10 @@ pub struct WorkspaceType {
     pub display_sep: String,
 
 
-    #[serde(default = "WorkspaceType::default_max_sub_count")]
-    pub max_sub_count: u32,
+    pub max_sub_count: Option<u32>,
+
+    #[serde(default = "WorkspaceType::default_display_name_empty")]
+    pub display_name_empty: String,
 
 
     #[serde(default = "WorkspaceType::default_sub_workspace")]

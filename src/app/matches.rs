@@ -16,11 +16,9 @@ pub fn handle_matches(config: Config) {
 
             match workspace {
                 "main" => {
-                    println!("i3ws go main {}", index);
                     super::handle_main_command(index, config);
                 }
                 "sub" => {
-                    println!("i3ws go sub {}", index);
                     super::handle_sub_command(index, config);
                 }
                 _ => {

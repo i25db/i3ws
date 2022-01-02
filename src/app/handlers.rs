@@ -1,6 +1,5 @@
 use std::cmp::Ordering;
 
-
 use crate::commands::*;
 use crate::config::Config;
 use crate::workspace::Workspace;
@@ -34,9 +33,16 @@ pub fn handle_main_command(index: u32, config: Config) {
 }
 
 pub fn handle_sub_command(index: u32, config: Config) {
-
     if let Some(mut focused) = query_first(|ws| ws.focused) {
         focused.sub_index = index;
+
+        if let Some(t) = config.get_type_by_name(&focused.suffix) {
+            if let Some(max_subs) = t.max_sub_count {
+                if index > max_subs {
+                    return;
+                }
+            }
+        }
 
         let target = query(|ws| {
             &ws.main_index == &focused.main_index && &ws.sub_index == &focused.sub_index
@@ -73,6 +79,15 @@ pub fn handle_sub_swap_command(index: u32, config: Config) {
     // 1) Check if *:[focused]:[index]:* exists
     //  a. If it does move it to [swap_prefix]:[focused]:[index]:*
     if let Some(focused) = query_first(|ws| ws.focused) {
+        // Don't swap to a workspace that is out of bounds
+        if let Some(t) = config.get_type_by_name(&focused.suffix) {
+            if let Some(max_subs) = t.max_sub_count {
+                if index > max_subs {
+                    return;
+                }
+            }
+        }
+
         if focused.prefix == config.default_prefix && config.swap_on_default_only {
             if let Some(dest) =
                 query_first(|ws| &ws.main_index == &focused.main_index && &ws.sub_index == &index)
@@ -86,7 +101,6 @@ pub fn handle_sub_swap_command(index: u32, config: Config) {
             // 2) Copy *:[focused]:[focused]:* -> *:[focused]:[index]:*
             let mut tmp = focused.clone();
             tmp.sub_index = index;
-
 
             move_workspace(&focused.get_name(), &tmp.get_name(), config.swap_on_sub);
 
@@ -104,7 +118,6 @@ pub fn handle_sub_swap_command(index: u32, config: Config) {
 }
 
 pub fn handle_main_swap_command(index: u32, config: Config) {
-
     // 1) Check if *:*:[index]:* exists
     //  a. If it does copy all *:[index]:*:* ->  [swap_prefix]:[index]:*:*
     if let Some(dest) = query(|ws| &ws.main_index == &index) {
@@ -122,7 +135,6 @@ pub fn handle_main_swap_command(index: u32, config: Config) {
         let origin_main_index = focused.main_index;
         let origin_sub_index = focused.sub_index;
 
-
         if let Some(focused) = query(|ws| {
             &ws.main_index == &focused.main_index && &ws.prefix == &config.default_prefix
         }) {
@@ -130,7 +142,6 @@ pub fn handle_main_swap_command(index: u32, config: Config) {
             for ws in &focused {
                 let mut tmp = ws.clone();
                 tmp.main_index = index;
-
 
                 // println!("  Copying {} to {}", &ws.get_name(), &tmp.get_name());
 
@@ -149,7 +160,6 @@ pub fn handle_main_swap_command(index: u32, config: Config) {
                 let mut tmp = swap.clone();
                 tmp.prefix = config.default_prefix.clone();
                 tmp.main_index = origin_main_index;
-
 
                 // println!("  Swapping {} to {}", &swap.get_name(), &tmp.get_name());
 
@@ -232,20 +242,37 @@ pub fn handle_info_command(t: &str, config: Config) {
 
             subs.sort_by(|a, b| a.sub_index.cmp(&b.sub_index));
 
+            let t = &config
+                .get_type_by_name(&subs[0].suffix)
+                .expect("Current sub workspace does not have a type");
+
+            let mut formats: Vec<String> = subs
+                .iter()
+                .map(|ws| {
+                    if ws.focused {
+                        t.sub_display_name_focused.clone()
+                    } else {
+                        t.sub_display_name.clone()
+                    }
+                })
+                .collect();
+
+            if let Some(max_subs) = t.max_sub_count {
+                formats = Vec::new();
+                while formats.len() < max_subs as usize {
+                    formats.push(t.display_name_empty.clone());
+                }
+
+                for ws in subs.iter().filter(|ws| ws.focused) {
+                    formats[(ws.sub_index - 1) as usize] = t
+                        .sub_display_name_focused
+                        .replace("{index}", &ws.sub_index.to_string())
+                }
+            }
+
             let mut first = true;
 
-            for sub in &subs {
-                let t = &config
-                    .get_type_by_name(&sub.suffix)
-                    .expect("Current sub workspace does not have a type");
-                let format = if sub.focused {
-                    &t.sub_display_name_focused
-                } else {
-                    &t.sub_display_name
-                };
-
-                let format = format.replace("{index}", &sub.sub_index.to_string());
-
+            for format in formats.iter() {
                 if first {
                     print!("{}", format)
                 } else {

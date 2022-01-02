@@ -56,8 +56,8 @@ impl WorkspaceType {
         WorkspaceType::default().display_sep
     }
 
-    pub fn default_max_sub_count() -> u32 {
-        WorkspaceType::default().max_sub_count
+    pub fn default_display_name_empty() -> String {
+        WorkspaceType::default().display_name_empty
     }
 
     pub fn default_sub_workspace() -> u32 {
@@ -115,7 +115,8 @@ impl Default for WorkspaceType {
             sub_display_name_focused: sub_display_name,
             display_sep: String::from(" | "),
 
-            max_sub_count: 10,
+            max_sub_count: Some(10),
+            display_name_empty: String::default(),
 
             default_sub_workspace: 1,
             execute_on_move: false,
