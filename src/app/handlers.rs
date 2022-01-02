@@ -168,7 +168,7 @@ pub fn handle_info_command(t: &str, config: Config) {
             let format = &config
                 .get_type_by_name(&current.suffix)
                 .expect("Current workspace does not have a type")
-                .display_name;
+                .display_name_focused;
             println!(
                 "{}",
                 format.replace("{index}", &current.main_index.to_string())
@@ -201,16 +201,22 @@ pub fn handle_info_command(t: &str, config: Config) {
 
             let mut first = true;
             for ws in &workspaces {
-                let format = &config
+                let t = &config
                     .get_type_by_name(&ws.suffix)
-                    .expect("Current workspace does not have a type")
-                    .display_name;
+                    .expect("Current workspace does not have a type");
+
+                let format = if ws.focused {
+                    &t.display_name_focused
+                } else {
+                    &t.display_name
+                };
+
                 let format = format.replace("{index}", &ws.main_index.to_string());
 
                 if first {
                     print!("{}", format)
                 } else {
-                    print!("|{}", format);
+                    print!("{}{}", t.display_sep, format);
                 }
 
                 first = false;
@@ -220,32 +226,30 @@ pub fn handle_info_command(t: &str, config: Config) {
         "all_subs" => {
             let current = query_first(|ws| ws.focused).expect("Found no focused workspace");
             let mut subs: Vec<Workspace> = query(|ws| {
-                println!("{:?}\n{:?} \nPrefix: {} \nIndex: {}\n", ws, current, config.default_prefix, ws.main_index == current.main_index);
                 &ws.prefix == &config.default_prefix && ws.main_index == current.main_index
             })
             .unwrap_or(Vec::<Workspace>::new());
-
-            println!("{:?}", subs);
 
             subs.sort_by(|a, b| a.sub_index.cmp(&b.sub_index));
 
             let mut first = true;
 
             for sub in &subs {
-                let format = &config
+                let t = &config
                     .get_type_by_name(&sub.suffix)
-                    .expect("Current sub workspace does not have a type")
-                    .sub_display_name;
-                let mut format = format.replace("{index}", &sub.sub_index.to_string());
+                    .expect("Current sub workspace does not have a type");
+                let format = if sub.focused {
+                    &t.sub_display_name_focused
+                } else {
+                    &t.sub_display_name
+                };
 
-                if sub.focused {
-                    format = format!("**{}", format);
-                }
+                let format = format.replace("{index}", &sub.sub_index.to_string());
 
                 if first {
                     print!("{}", format)
                 } else {
-                    print!("|{}", format);
+                    print!("{}{}", t.display_sep, format);
                 }
 
                 first = false;
