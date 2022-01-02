@@ -24,7 +24,7 @@ pub fn parse_workspaces(json: &str) -> Vec<Workspace> {
     workspaces
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Workspace {
     pub prefix: String,
     pub main_index: u32,

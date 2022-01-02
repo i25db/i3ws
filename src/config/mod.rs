@@ -3,35 +3,79 @@ use std::fs::{self, OpenOptions};
 use std::io::{Read, Write};
 
 use std::path::Path;
+use serde::{Serialize, Deserialize};
 
-mod config_file;
-
-use config_file::*;
+mod default;
 
 const CONFIG_PATH: &str = "/home/i25db/.config/i3ws/";
 const CONFIG_FILE: &str = "i3ws.toml";
 
+#[derive(Serialize, Deserialize)]
 pub struct Config {
+    #[serde(default = "Config::default_prefix", skip)]
     pub default_prefix: String,
-    pub default_type: String,
+
+
+    #[serde(default = "Config::default_swap_prefix", skip)]
     pub default_swap_prefix: String,
+    pub default_type: String,
+    
+    #[serde(default = "Config::default_main_index")]
     pub default_main_index: u32,
+
+    #[serde(default = "Config::default_sub_index")]
     pub default_sub_index: u32,
 
+
+    #[serde(default = "Config::default_swap_on_sub")]
     pub swap_on_sub: bool,
+
+    #[serde(default = "Config::default_swap_on_main")]
     pub swap_on_main: bool,
+
+    #[serde(default = "Config::default_swap_on_default_only")]
     pub swap_on_default_only: bool,
+
+    #[serde(default = "Config::default_types")]
     pub types: Vec<WorkspaceType>,
 }
 
+#[derive(Serialize, Deserialize)]
 pub struct WorkspaceType {
     pub name: String,
+
+
+    #[serde(default = "WorkspaceType::default_display_name")]
     pub display_name: String,
+
+    #[serde(default = "WorkspaceType::default_display_name_focused")]
+    pub display_name_focused: String,
+
+    #[serde(default = "WorkspaceType::default_sub_display_name")]
     pub sub_display_name: String,
+
+    #[serde(default = "WorkspaceType::default_sub_display_name_focused")]
+    pub sub_display_name_focused: String,
+
+    #[serde(default = "WorkspaceType::default_display_sep")]
+    pub display_sep: String,
+
+
+    #[serde(default = "WorkspaceType::default_max_sub_count")]
+    pub max_sub_count: u32,
+
+
+    #[serde(default = "WorkspaceType::default_sub_workspace")]
     pub default_sub_workspace: u32,
+
+    #[serde(default = "WorkspaceType::default_execute_on_move")]
     pub execute_on_move: bool,
+
+    #[serde(default = "WorkspaceType::default_growable")]
     pub growable: bool,
-    pub commands: HashMap<u32, Vec<String>>,
+
+    #[serde(default = "WorkspaceType::default_commands")]
+    pub commands: HashMap<String, Vec<String>>,
 }
 
 impl Config {
@@ -62,7 +106,7 @@ impl Config {
                 .open(path_str)
                 .expect("Error opening config file.");
 
-            let toml_str = toml::to_string(&TomlConfig::from(Config::default()))
+            let toml_str = toml::to_string(&Config::default())
                 .expect("Error parsing config object to toml");
 
             file.write_all(toml_str.as_bytes())
@@ -79,8 +123,8 @@ impl Config {
             file.read_to_string(&mut contents)
                 .expect("Error reading config file");
 
-            match toml::from_str::<TomlConfig>(&contents) {
-                Ok(config) => Config::from(config),
+            match toml::from_str::<Config>(&contents) {
+                Ok(config) => config,
                 Err(err) => {
                     println!("Error parsing config file: {}.\n Using default config", err);
                     Config::default()
@@ -97,44 +141,6 @@ impl Config {
             Some(&self.types[pos])
         } else {
             None
-        }
-    }
-}
-
-impl Default for Config {
-    fn default() -> Self {
-        let mut types = Vec::<WorkspaceType>::new();
-
-        types.push(WorkspaceType::default());
-
-        Self {
-            default_prefix: "i3ws".to_string(),
-            default_type: "plain".to_string(),
-            default_swap_prefix: "i3wsswap".to_string(),
-            default_main_index: 1,
-            default_sub_index: 1,
-            swap_on_sub: false,
-            swap_on_main: true,
-            swap_on_default_only: true,
-            types,
-        }
-    }
-}
-
-impl Default for WorkspaceType {
-    fn default() -> Self {
-        let mut commands = HashMap::<u32, Vec<String>>::new();
-        commands.insert(1, vec![String::from("kitty"), String::from("qutebrowser")]);
-        commands.insert(2, vec![String::from("steam")]);
-
-        Self {
-            name: String::from("plain"),
-            display_name: String::from(" {index}"),
-            sub_display_name: String::from("{index}"),
-            default_sub_workspace: 1,
-            execute_on_move: false,
-            growable: true,
-            commands,
         }
     }
 }

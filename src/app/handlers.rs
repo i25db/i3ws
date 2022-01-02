@@ -220,9 +220,12 @@ pub fn handle_info_command(t: &str, config: Config) {
         "all_subs" => {
             let current = query_first(|ws| ws.focused).expect("Found no focused workspace");
             let mut subs: Vec<Workspace> = query(|ws| {
+                println!("{:?}\n{:?} \nPrefix: {} \nIndex: {}\n", ws, current, config.default_prefix, ws.main_index == current.main_index);
                 &ws.prefix == &config.default_prefix && ws.main_index == current.main_index
             })
             .unwrap_or(Vec::<Workspace>::new());
+
+            println!("{:?}", subs);
 
             subs.sort_by(|a, b| a.sub_index.cmp(&b.sub_index));
 
