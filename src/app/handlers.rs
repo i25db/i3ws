@@ -42,14 +42,7 @@ pub fn handle_sub_command(index: u32, config: Config) {
         }
     }
 
-    let target = query_index(&focused.main_index, &focused.sub_index);
-
-    let growable = &config.get_type_by_name(&focused.suffix).growable;
-
-    // If the target workspace exists or is growable
-    if target.is_some() || *growable {
-        activate_workspace(&focused.get_name());
-    }
+    activate_workspace(&focused.get_name());
 }
 
 pub fn handle_new_command(new_type: String, config: Config) {
