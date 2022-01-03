@@ -5,10 +5,9 @@ use std::process::{Command, Stdio};
 use crate::check_error;
 
 pub fn activate_workspace(ws: &str) {
-    Command::new("i3-msg")
+    check_error!(Command::new("i3-msg")
         .arg(format!("workspace {}", ws))
-        .output()
-        .expect("Failed to execute i3-msg command");
+        .output(), "Failed to execute i3-msg command: {}");
 }
 
 pub fn move_workspace(source: &str, dest: &str, focus_dest: bool) {
@@ -29,7 +28,7 @@ pub fn get_workspaces() -> Vec<Workspace> {
         .output(), "Failed to execute i3-msg command: {}");
 
     workspace::parse_workspaces(
-        &String::from_utf8(output.stdout).expect("Unable to convert UTF-8 to String"),
+        check_error!(&String::from_utf8(output.stdout), "Unable to convert UTF-8 to String: {}"),
     )
 }
 

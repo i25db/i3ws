@@ -5,7 +5,7 @@ use std::io::{Read, Write};
 use serde::{Deserialize, Serialize};
 use std::path::Path;
 
-use crate::check_error;
+use crate::{check_error, safe_panic};
 
 const CONFIG_PATH: &str = "/home/i25db/.config/i3ws/";
 const CONFIG_FILE: &str = "i3ws.toml";
@@ -128,14 +128,13 @@ impl Config {
         }
     }
 
-    pub fn get_type_by_name(&self, name: &str) -> Option<&WorkspaceType> {
+    pub fn get_type_by_name(&self, name: &str) -> &WorkspaceType {
         let name = name.to_string();
         let pos = self.types.iter().position(|t| t.name == name);
 
-        if let Some(pos) = pos {
-            Some(&self.types[pos])
-        } else {
-            None
+        if let None = pos {
+            safe_panic!("Current workspace does not have a type");
         }
+        &self.types[pos]
     }
 }

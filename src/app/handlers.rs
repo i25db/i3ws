@@ -35,20 +35,16 @@ pub fn handle_sub_command(index: u32, config: Config) {
     let mut focused = query_focused();
     focused.sub_index = index;
 
-    if let Some(t) = config.get_type_by_name(&focused.suffix) {
-        if let Some(max_subs) = t.max_sub_count {
-            if index > max_subs {
-                return;
-            }
+    let t = config.get_type_by_name(&focused.suffix);
+    if let Some(max_subs) = t.max_sub_count {
+        if index > max_subs {
+            return;
         }
     }
 
     let target = query_index(&focused.main_index, &focused.sub_index);
 
-    let growable = match config.get_type_by_name(&focused.suffix) {
-        Some(n) => n.growable,
-        None => false,
-    };
+    let growable = config.get_type_by_name(&focused.suffix).growable;
 
     // If the target workspace exists or is growable
     if target.is_some() || growable {
@@ -59,14 +55,13 @@ pub fn handle_sub_command(index: u32, config: Config) {
 pub fn handle_new_command(new_type: String, config: Config) {
     let mut focused = query_focused();
     if is_workspace_empty(focused.get_name()) {
-        if let Some(ws_type) = config.get_type_by_name(&new_type) {
-            focused.suffix = new_type;
+        let ws_type = config.get_type_by_name(&new_type);
+        focused.suffix = new_type;
 
-            for (_ws, _command) in &ws_type.commands {}
+        for (_ws, _command) in &ws_type.commands {}
 
-            focused.sub_index = ws_type.default_sub_workspace;
-            activate_workspace(&focused.get_name());
-        }
+        focused.sub_index = ws_type.default_sub_workspace;
+        activate_workspace(&focused.get_name());
     }
 }
 
@@ -75,11 +70,10 @@ pub fn handle_sub_swap_command(index: u32, config: Config) {
     //  a. If it does move it to [swap_prefix]:[focused]:[index]:*
     let focused = query_focused();
     // Don't swap to a workspace that is out of bounds
-    if let Some(t) = config.get_type_by_name(&focused.suffix) {
-        if let Some(max_subs) = t.max_sub_count {
-            if index > max_subs {
-                return;
-            }
+    let t = config.get_type_by_name(&focused.suffix);
+    if let Some(max_subs) = t.max_sub_count {
+        if index > max_subs {
+            return;
         }
     }
 
@@ -113,12 +107,10 @@ pub fn handle_main_swap_command(index: u32, config: Config) {
     // 1) Check if *:*:[index]:* exists
     //  a. If it does copy all *:[index]:*:* ->  [swap_prefix]:[index]:*:*
     if let Some(dest) = query_all_by_main(&index) {
-        // println!("Found {} in destination", dest[0].get_name());
         for ws in &dest {
             let mut tmp = ws.clone();
             tmp.prefix = config.default_swap_prefix.clone();
 
-            // println!("  Moving {} to {}", &ws.get_name(), &tmp.get_name());
             move_workspace(&ws.get_name(), &tmp.get_name(), false);
         }
     }
@@ -158,11 +150,9 @@ pub fn handle_info_command(t: &str, config: Config) {
         "current" => {
             let current = query_focused();
 
-            let format = &check_some!(
-                config.get_type_by_name(&current.suffix),
-                "Current workspace does not have a type"
-            )
-            .display_name_focused;
+            let format = config
+                .get_type_by_name(&current.suffix)
+                .display_name_focused;
             println!(
                 "{}",
                 format.replace("{index}", &current.main_index.to_string())
@@ -195,10 +185,7 @@ pub fn handle_info_command(t: &str, config: Config) {
 
             let mut first = true;
             for ws in &workspaces {
-                let t = &check_some!(
-                    config.get_type_by_name(&ws.suffix),
-                    "Current workspace does not have a type"
-                );
+                let t = config.get_type_by_name(&ws.suffix);
 
                 let format = if ws.focused {
                     &t.display_name_focused
@@ -226,10 +213,7 @@ pub fn handle_info_command(t: &str, config: Config) {
             );
             subs.sort_by(|a, b| a.sub_index.cmp(&b.sub_index));
 
-            let t = &check_some!(
-                config.get_type_by_name(&subs[0].suffix),
-                "Current sub workspace does not have a type"
-            );
+            let t = config.get_type_by_name(&subs[0].suffix);
 
             let mut formats: Vec<String> = subs
                 .iter()
