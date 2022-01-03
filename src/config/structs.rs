@@ -135,6 +135,6 @@ impl Config {
         if let None = pos {
             safe_panic!("Current workspace does not have a type");
         }
-        &self.types[pos]
+        &self.types[pos.unwrap()]
     }
 }
