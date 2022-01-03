@@ -1,5 +1,6 @@
 use crate::config::Config;
 use crate::workspace::Workspace;
+use crate::{check_error, check_some, safe_panic};
 
 use clap::{App, AppSettings, Arg, ArgMatches, ArgSettings, PossibleValue};
 
@@ -7,12 +8,11 @@ use clap::{App, AppSettings, Arg, ArgMatches, ArgSettings, PossibleValue};
 pub fn handle_matches(config: Config) {
     match get_matches(&config).subcommand() {
         Some(("go", sc_matches)) => {
-            let workspace = sc_matches.value_of("workspace").unwrap();
-            let index = sc_matches
-                .value_of("index")
-                .unwrap()
-                .parse::<u32>()
-                .unwrap();
+            let workspace = check_some!(sc_matches.value_of("workspace"), "No workspace given");
+            let index = check_error!(
+                check_some!(sc_matches.value_of("index"), "No index given").parse::<u32>(),
+                "Index should be a number: {}"
+            );
 
             match workspace {
                 "main" => {
@@ -27,17 +27,16 @@ pub fn handle_matches(config: Config) {
             }
         }
         Some(("new", sc_matches)) => {
-            let new = sc_matches.value_of("new").unwrap().to_string();
+            let new = check_some!(sc_matches.value_of("new"), "No type given").to_string();
             super::handle_new_command(new, config);
         }
         Some(("swap", sc_matches)) => {
-            let index = sc_matches
-                .value_of("index")
-                .unwrap()
-                .parse::<u32>()
-                .unwrap();
-            let dest = sc_matches.value_of("dest").unwrap();
-
+            let index = check_error!(
+                check_some!(sc_matches.value_of("index"), "No index given").parse::<u32>(),
+                "Index should be a number: {}"
+            );
+            let dest = check_some!(sc_matches.value_of("dest"), "No destination given");
+            
             match dest {
                 "sub" => {
                     super::handle_sub_swap_command(index, config);
@@ -45,7 +44,7 @@ pub fn handle_matches(config: Config) {
                 "main" => {
                     super::handle_main_swap_command(index, config);
                 }
-                dest => panic!("Unknown destination: {}", dest),
+                dest => safe_panic!("Unknown destination: {}", dest),
             };
         }
         Some(("info", sc_matches)) => {
@@ -57,7 +56,7 @@ pub fn handle_matches(config: Config) {
             crate::commands::activate_workspace(&Workspace::from(config).get_name());
         }
         _ => {
-            panic!("Unknown command");
+            safe_panic!("Unknown command");
         }
     }
 }

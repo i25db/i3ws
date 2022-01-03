@@ -1,4 +1,4 @@
-use crate::config::Config;
+use crate::{check_error, config::Config, safe_panic};
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
@@ -9,8 +9,10 @@ struct JsonWorkspace {
 }
 
 pub fn parse_workspaces(json: &str) -> Vec<Workspace> {
-    let json_workspaces: Vec<JsonWorkspace> =
-        serde_json::from_str(json).expect("Failed to parse json string");
+    let json_workspaces: Vec<JsonWorkspace> = check_error!(
+        serde_json::from_str(json),
+        "Failed to parse json string: {}"
+    );
 
     let mut workspaces = Vec::<Workspace>::new();
 
@@ -60,15 +62,14 @@ impl<I: Into<String>> From<I> for Workspace {
         let split: Vec<&str> = name.split(':').collect();
 
         if split.len() != 4 {
-            return Workspace::from(Config::default());
+            safe_panic!("Unable to parse workspace name");
+            //return Workspace::from(Config::default());
         }
 
-        let main_index = split[1]
-            .parse::<u32>()
-            .unwrap_or(Config::default().default_main_index);
-        let sub_index = split[2]
-            .parse::<u32>()
-            .unwrap_or(Config::default().default_sub_index);
+        let main_index = check_error!(split[1].parse::<u32>(), "Unable to parse main index: {}");
+        //.unwrap_or(Config::default().default_main_index);
+        let sub_index = check_error!(split[2].parse::<u32>(), "Unable to parse sub index: {}");
+        //.unwrap_or(Config::default().default_sub_index);
 
         Self {
             prefix: split[0].to_string(),

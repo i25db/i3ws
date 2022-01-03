@@ -112,18 +112,16 @@ impl Config {
             let file = OpenOptions::new()
                 .read(true)
                 .open(path_str);
-                //.expect("Error opening config file.");
 
             let mut file = check_error!(file, "Error opening config file: {}");
 
             let mut contents = String::new();
             check_error!(file.read_to_string(&mut contents), "Error reading config file: {}");
-                //.expect("Error reading config file");
 
             match toml::from_str::<Config>(&contents) {
                 Ok(config) => config,
                 Err(err) => {
-                    println!("Error parsing config file: {}.\n Using default config", err);
+                    eprintln!("Error parsing config file: {}.\n Using default config", err);
                     Config::default()
                 }
             }
