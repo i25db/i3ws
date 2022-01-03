@@ -1,6 +1,6 @@
 <a name="desc"></a>
 # i3ws Introduction
-The purpose of this project is mostly to learn rust and along the way make a tool to manage my workspaces. I've only been on Linux for a month or two now and I've already found myself limited by the default 10 workspaces i3 has. i3ws can be used in a situation like this to group multiple workspaces into one workspace
+The purpose of this project is mostly to learn rust and along the way make a tool to manage my workspaces. I've only been on Linux for a month or two now and have found myself limited by the default 10 workspaces i3 has. i3ws can be used in a situation like this to group multiple workspaces into one workspace
 ## Table of Contents
 - [Introduction](#desc)
 - [Features](#features)
@@ -16,38 +16,39 @@ The purpose of this project is mostly to learn rust and along the way make a too
   - [i3 Configuration](#i3-conf)
   - [sxhkd Configuration](#sxhkd-conf)
   - [i3ws Configuration](#i3ws-conf)
+  - Polybar Configuration
 - [Todo](#todo)
 <a name="features"></a>
 ## Features
 - Navigate through the main workspaces (ex. `i3ws go main 1`)
 - Navigate through the sub workspaces (ex. `i3ws go sub 1`)
 - Create a new workspace from preset (ex. `i3ws new code`)
-- **And more incoming** <br/> <br/>
-When properly setup with shortcuts in your i3 config you can easily access 25+ workspaces
+- Swap sub workspaces and main workspaces (ex. `i3ws swap sub -d 2`)
+- Configure the way each workspace name displays (see [i3ws configuration](#i3ws-conf)).
 <a name="deps"></a>
 ## Dependencies
 - **i3wm** or **i3-gaps** naturally
 - **jq** for parsing i3-msg output
 <a name="isntallation"></a>
 ## Installation
-At the moment there is a basic installation script. Just run `./install.sh`
+At the moment there is a basic installation script. Just run `./install.sh` to build and copy the executable to `~/.local/bin`
 <a name="commands"></a>
 ## Commands
 <a name="commands-go"></a>
-- **`i3ws go [main | sub] [index]`** <br/>
+- `i3ws go [main | sub] [index]` <br/>
 This command will navigate to either the first sub workspace of an existing main workspace, or a sub workspace of the currently focused main workspace
 <a name="commands-new"></a>
-- **`i3ws new [your presets here]`** <br/>
+- `i3ws new [your presets here]` <br/>
 If the current main workspace (including all of its subworkspaces) has no windows open this will load a preset into the main workspace
 <a name="commands-swap"></a>
-- **`i3ws swap [main | sub] -d [index]`** <br/>
+- `i3ws swap [main | sub] -d [index]` <br/>
 Swaps the focused main or sub workspace with the given main or sub index
 <a name="commands-info"></a>
-- **`i3ws info [current | all_mains | all_subs]`** <br/>
+- `i3ws info [current | all_mains | all_subs]` <br/>
 Prints the name of the focused main workspace, a list of all the main workspace names or a list of
 all the sub workspace names. See [i3ws configuration](#i3ws-conf). 
 <a name="commands-default"></a>
-- **`i3ws default`** <br/>
+- `i3ws default` <br/>
 Goes to the default workspace. Run this command at startup so that your first workspace doesn't get
 lost
 <a name="conf"></a>
@@ -182,3 +183,6 @@ growable = true
 - [x] Create an install script
 - [ ] Remove jq dependency
 - [ ] Cleanup output/error messages
+- [ ] Move container to sub workspace
+- [ ] Move container to main workspace
+- [ ] Configure each sub workspace name
