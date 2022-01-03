@@ -22,12 +22,9 @@ pub fn handle_main_command(index: u32, config: Config) {
             main_ws.sub_index = sub_ws.sub_index;
             main_ws.suffix = sub_ws.suffix;
 
-            activate_workspace(&main_ws.get_name());
         }
-        // else workspace doesn't exist yet, make default workspace
-        else {
-            activate_workspace(&main_ws.get_name());
-        }
+
+        activate_workspace(&main_ws.get_name());
     }
 }
 
